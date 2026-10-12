@@ -5,6 +5,8 @@ interface PlayerState {
   audioId: string | null;
   profileId: string | null;
   title: string | null;
+  playbackError: string | null;
+  setPlaybackError: (error: string | null) => void;
   isPlaying: boolean;
   currentTime: number;
   duration: number;
@@ -33,6 +35,8 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   audioId: null,
   profileId: null,
   title: null,
+  playbackError: null,
+  setPlaybackError: (error) => set({ playbackError: error }),
   isPlaying: false,
   currentTime: 0,
   duration: 0,
@@ -48,6 +52,7 @@ export const usePlayerStore = create<PlayerState>((set) => ({
       audioId: id,
       profileId: profileId || null,
       title: title || null,
+      playbackError: null,
       currentTime: 0,
       isPlaying: false,
       shouldRestart: false,
@@ -59,6 +64,7 @@ export const usePlayerStore = create<PlayerState>((set) => ({
       audioId: id,
       profileId: profileId || null,
       title: title || null,
+      playbackError: null,
       currentTime: 0,
       isPlaying: false,
       shouldRestart: false,
@@ -79,6 +85,7 @@ export const usePlayerStore = create<PlayerState>((set) => ({
       audioId: null,
       profileId: null,
       title: null,
+      playbackError: null,
       isPlaying: false,
       currentTime: 0,
       duration: 0,

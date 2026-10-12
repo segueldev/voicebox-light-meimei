@@ -15,19 +15,19 @@ export function ServerStatus() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <div className="text-sm text-muted-foreground mb-1">Server URL</div>
+          <div className="text-sm text-muted-foreground mb-1">Dirección del servidor</div>
           <div className="font-mono text-sm">{serverUrl}</div>
         </div>
 
         {isLoading ? (
           <div className="flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm">Checking connection...</span>
+            <span className="text-sm">Comprobando conexión…</span>
           </div>
         ) : error ? (
           <div className="flex items-center gap-2">
             <XCircle className="h-4 w-4 text-destructive" />
-            <span className="text-sm text-destructive">Connection failed: {error.message}</span>
+            <span className="text-sm text-destructive">Error de conexión:{error.message}</span>
           </div>
         ) : health ? (
           <div className="space-y-2">
@@ -38,7 +38,7 @@ export function ServerStatus() {
               <Badge
                 variant={health.model_loaded || health.model_downloaded ? 'default' : 'secondary'}
               >
-                {health.model_loaded || health.model_downloaded ? 'Model Ready' : 'No Model'}
+                {health.model_loaded || health.model_downloaded ? "Modelo listo" : "Sin modelo"}
               </Badge>
               <Badge variant={health.gpu_available ? 'default' : 'secondary'}>
                 GPU: {health.gpu_available ? 'Available' : 'Not Available'}

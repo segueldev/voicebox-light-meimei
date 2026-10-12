@@ -6,159 +6,104 @@ import { useGenerationSettings } from '@/lib/hooks/useSettings';
 import { useGenerationStore } from '@/stores/generationStore';
 import { usePlayerStore } from '@/stores/playerStore';
 
-interface GenerationStatusEvent {
+interface StatusEvent {
   id: string;
   status: 'loading_model' | 'generating' | 'completed' | 'failed' | 'not_found';
   duration?: number;
   error?: string;
   source?: string;
 }
-
-// Agent-initiated generations are played by the floating pill, not the
-// main-window AudioPlayer. Skip autoplay here to avoid double-playback.
+interface Connection { source: EventSource | null; timer: number | null; finishing: boolean; cancelled: boolean; origin?: string }
 const AGENT_SOURCES = new Set(['mcp', 'rest']);
 
-/**
- * Subscribes to SSE for all pending generations. When a generation completes,
- * invalidates the history query, removes it from pending, and auto-plays
- * if the player is idle.
- */
 export function useGenerationProgress() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const pendingIds = useGenerationStore((s) => s.pendingGenerationIds);
-  const removePendingGeneration = useGenerationStore((s) => s.removePendingGeneration);
-  const removePendingStoryAdd = useGenerationStore((s) => s.removePendingStoryAdd);
-  const isPlaying = usePlayerStore((s) => s.isPlaying);
-  const setAudioWithAutoPlay = usePlayerStore((s) => s.setAudioWithAutoPlay);
-  const { settings: genSettings } = useGenerationSettings();
-  const autoplayOnGenerate = genSettings?.autoplay_on_generate ?? true;
-
-  // Keep refs to avoid stale closures in EventSource handlers
-  const isPlayingRef = useRef(isPlaying);
-  const autoplayRef = useRef(autoplayOnGenerate);
-  isPlayingRef.current = isPlaying;
-  autoplayRef.current = autoplayOnGenerate;
-
-  // Track active EventSource instances
-  const eventSourcesRef = useRef<Map<string, EventSource>>(new Map());
-
-  // Unmount-only cleanup — close all SSE connections when the hook is torn down
+  const { settings } = useGenerationSettings();
+  const autoplayRef = useRef(true);
+  autoplayRef.current = settings?.autoplay_on_generate ?? true;
+  const connections = useRef(new Map<string, Connection>());
   useEffect(() => {
-    const sources = eventSourcesRef.current;
+    const all = connections.current;
     return () => {
-      for (const source of sources.values()) {
-        source.close();
+      for (const connection of all.values()) {
+        connection.cancelled = true; connection.source?.close();
+        if (connection.timer !== null) clearTimeout(connection.timer);
       }
-      sources.clear();
+      all.clear();
     };
   }, []);
 
   useEffect(() => {
-    const currentSources = eventSourcesRef.current;
-
-    // Close SSE connections for IDs no longer pending
-    for (const [id, source] of currentSources.entries()) {
-      if (!pendingIds.has(id)) {
-        source.close();
-        currentSources.delete(id);
-      }
+    const all = connections.current;
+    for (const [id, connection] of all) if (!pendingIds.has(id)) {
+      connection.cancelled = true; connection.source?.close();
+      if (connection.timer !== null) clearTimeout(connection.timer);
+      all.delete(id);
     }
-
-    // Open SSE connections for new pending IDs
     for (const id of pendingIds) {
-      if (currentSources.has(id)) continue;
-
-      const url = apiClient.getGenerationStatusUrl(id);
-      const source = new EventSource(url);
-
-      source.onmessage = (event) => {
-        try {
-          const data: GenerationStatusEvent = JSON.parse(event.data);
-
-          if (data.status === 'completed') {
-            source.close();
-            currentSources.delete(id);
-            removePendingGeneration(id);
-
-            // Refetch history to pick up the completed generation
-            queryClient.refetchQueries({ queryKey: ['history'] });
-
-            // If this generation was queued for a story, add it now
-            const storyId = removePendingStoryAdd(id);
-            if (storyId) {
-              apiClient
-                .addStoryItem(storyId, { generation_id: id })
-                .then(() => {
-                  queryClient.invalidateQueries({ queryKey: ['stories'] });
-                  queryClient.invalidateQueries({ queryKey: ['stories', storyId] });
-                  toast({
-                    title: 'Added to story',
-                    description: data.duration
-                      ? `Audio generated (${data.duration.toFixed(2)}s) and added to story`
-                      : 'Audio generated and added to story',
-                  });
-                })
-                .catch(() => {
-                  toast({
-                    title: 'Generation complete',
-                    description: 'Audio generated but failed to add to story',
-                    variant: 'destructive',
-                  });
-                });
-            } else {
-              // toast({
-              //   title: 'Generation complete!',
-              //   description: data.duration
-              //     ? `Audio generated (${data.duration.toFixed(2)}s)`
-              //     : 'Audio generated',
-              // });
-            }
-
-            // Auto-play if enabled and nothing is currently playing.
-            // Skip agent-initiated sources — the floating pill window
-            // plays those itself.
-            const isAgentSpeak = data.source ? AGENT_SOURCES.has(data.source) : false;
-            if (autoplayRef.current && !isPlayingRef.current && !isAgentSpeak) {
-              const genAudioUrl = apiClient.getAudioUrl(id);
-              setAudioWithAutoPlay(genAudioUrl, id, '', '');
-            }
-          } else if (data.status === 'failed' || data.status === 'not_found') {
-            source.close();
-            currentSources.delete(id);
-            removePendingGeneration(id);
-            removePendingStoryAdd(id);
-
-            queryClient.refetchQueries({ queryKey: ['history'] });
-
-            toast({
-              title: data.status === 'not_found' ? 'Generation not found' : 'Generation failed',
-              description: data.error || 'An error occurred during generation',
-              variant: 'destructive',
-            });
-          }
-        } catch {
-          // Ignore parse errors from heartbeats etc
+      if (all.has(id)) continue;
+      const connection: Connection = { source: null, timer: null, finishing: false, cancelled: false };
+      all.set(id, connection);
+      const accept = async (data: StatusEvent) => {
+        if (connection.cancelled || connection.finishing) return;
+        if (data.source) connection.origin = data.source;
+        const store = useGenerationStore.getState();
+        if (data.status === 'loading_model' || data.status === 'generating') {
+          store.updateGenerationStage(id, data.status);
+          return;
+        }
+        if (!['completed', 'failed', 'not_found'].includes(data.status)) return;
+        connection.finishing = true;
+        connection.source?.close();
+        if (connection.timer !== null) clearTimeout(connection.timer);
+        const generation = await apiClient.getGeneration(id).catch(() => null);
+        if (connection.cancelled) return;
+        store.finishGeneration({ id, status: data.status === 'completed' ? 'completed' : 'failed', text: generation?.text, profileId: generation?.profile_id, error: data.error || (data.status === 'not_found' ? 'No se encontró esta generación.' : undefined) });
+        store.removePendingGeneration(id);
+        queryClient.invalidateQueries({ queryKey: ['history'] });
+        const storyId = store.removePendingStoryAdd(id);
+        if (data.status !== 'completed') {
+          toast({ title: 'No se pudo generar el audio', description: data.error || 'Recupera el texto y vuelve a intentarlo.', variant: 'destructive' });
+          return;
+        }
+        if (storyId) apiClient.addStoryItem(storyId, { generation_id: id }).then(() => {
+          queryClient.invalidateQueries({ queryKey: ['stories'] });
+          toast({ title: 'Audio añadido a la historia' });
+        }).catch(() => toast({ title: 'Audio listo', description: 'No se pudo añadir a la historia. Sigue disponible en el historial.', variant: 'destructive' }));
+        const player = usePlayerStore.getState();
+        if (autoplayRef.current && !player.isPlaying && !AGENT_SOURCES.has(connection.origin ?? '')) {
+          player.setAudioWithAutoPlay(apiClient.getAudioUrl(id), id, generation?.profile_id ?? null, generation?.text.slice(0, 60));
         }
       };
-
-      source.onerror = () => {
-        // SSE connection dropped — clean up and refresh history so any
-        // completed/failed generation still appears in the list
-        source.close();
-        currentSources.delete(id);
-        removePendingGeneration(id);
-        queryClient.refetchQueries({ queryKey: ['history'] });
+      // A lost progress stream does not mean that generation has finished.
+      // Poll the saved job until its actual terminal state is known.
+      const poll = async () => {
+        if (connection.cancelled || connection.finishing) return;
+        try {
+          const generation = await apiClient.getGeneration(id);
+          await accept({ id, status: (generation.status || 'completed') as StatusEvent['status'], duration: generation.duration ?? undefined, error: generation.error ?? undefined });
+        } catch (error) {
+          if (error instanceof Error && /generation not found|404/i.test(error.message)) {
+            await accept({ id, status: 'not_found' });
+          }
+          if (!connection.cancelled && !connection.finishing) useGenerationStore.getState().updateGenerationStage(id, 'reconnecting');
+        }
+        if (!connection.cancelled && !connection.finishing) connection.timer = window.setTimeout(poll, 1500);
       };
-
-      currentSources.set(id, source);
+      const fallback = () => {
+        if (connection.cancelled || connection.finishing || connection.timer !== null) return;
+        connection.source?.close(); connection.source = null;
+        useGenerationStore.getState().updateGenerationStage(id, 'reconnecting');
+        connection.timer = window.setTimeout(poll, 500);
+      };
+      try {
+        const source = new EventSource(apiClient.getGenerationStatusUrl(id));
+        connection.source = source;
+        source.onmessage = (event) => { try { void accept(JSON.parse(event.data)); } catch { /* heartbeat */ } };
+        source.onerror = fallback;
+      } catch { fallback(); }
     }
-  }, [
-    pendingIds,
-    removePendingGeneration,
-    removePendingStoryAdd,
-    queryClient,
-    toast,
-    setAudioWithAutoPlay,
-  ]);
+  }, [pendingIds, queryClient, toast]);
 }

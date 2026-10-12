@@ -382,8 +382,8 @@ async def update_profile(
             raise ValueError(f"A profile with the name '{data.name}' already exists. Please choose a different name.")
 
     voice_type = getattr(profile, "voice_type", None) or "cloned"
-    preset_engine = getattr(profile, "preset_engine", None)
-    preset_voice_id = getattr(profile, "preset_voice_id", None)
+    preset_engine = data.preset_engine if data.preset_engine is not None else getattr(profile, "preset_engine", None)
+    preset_voice_id = data.preset_voice_id if data.preset_voice_id is not None else getattr(profile, "preset_voice_id", None)
     design_prompt = getattr(profile, "design_prompt", None)
     default_engine = data.default_engine if data.default_engine is not None else getattr(profile, "default_engine", None)
 
@@ -397,6 +397,8 @@ async def update_profile(
     if validation_error:
         raise ValueError(validation_error)
 
+    profile.preset_engine = preset_engine
+    profile.preset_voice_id = preset_voice_id
     profile.name = data.name
     profile.description = data.description
     profile.language = data.language

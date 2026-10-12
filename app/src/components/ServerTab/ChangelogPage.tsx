@@ -187,7 +187,7 @@ function ChangelogEntryCard({ entry }: { entry: ChangelogEntry }) {
       <div className="flex items-baseline gap-3 mb-3">
         <h3 className="text-xl font-semibold tracking-tight">{entry.version}</h3>
         {entry.date && <span className="text-xs text-muted-foreground">{entry.date}</span>}
-        {entry.version === 'Unreleased' && (
+        {entry.version === "Sin publicar" && (
           <Badge variant="outline">{t('settings.changelog.devBadge')}</Badge>
         )}
       </div>

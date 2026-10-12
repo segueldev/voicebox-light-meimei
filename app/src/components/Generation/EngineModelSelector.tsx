@@ -51,8 +51,8 @@ function getAvailableOptions(selectedProfile?: VoiceProfileResponse | null) {
 }
 
 function getSelectValue(engine: string, modelSize?: string): string {
-  if (engine === 'qwen') return `qwen:${modelSize || '1.7B'}`;
-  if (engine === 'qwen_custom_voice') return `qwen_custom_voice:${modelSize || '1.7B'}`;
+  if (engine === 'qwen') return `qwen:${modelSize || '0.6B'}`;
+  if (engine === 'qwen_custom_voice') return `qwen_custom_voice:${modelSize || '0.6B'}`;
   if (engine === 'tada') return `tada:${modelSize || '1B'}`;
   return engine;
 }
@@ -117,7 +117,7 @@ export function EngineModelSelector({ form, compact, selectedProfile }: EngineMo
   const engine = form.watch('engine') || 'qwen';
   const modelSize = form.watch('modelSize');
   const selectValue = getSelectValue(engine, modelSize);
-  const availableOptions = getAvailableOptions(selectedProfile);
+  const availableOptions = getAvailableOptions(selectedProfile).filter((option) => !import.meta.env.VITE_LOW_MEMORY || ['qwen:0.6B', 'kokoro'].includes(option.value));
 
   const currentEngineAvailable = availableOptions.some((opt) => opt.value === selectValue);
 

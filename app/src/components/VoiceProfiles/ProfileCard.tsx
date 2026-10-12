@@ -27,9 +27,10 @@ const ENGINE_DISPLAY_NAMES: Record<string, string> = {
 interface ProfileCardProps {
   profile: VoiceProfileResponse;
   disabled?: boolean;
+  compact?: boolean;
 }
 
-export function ProfileCard({ profile, disabled }: ProfileCardProps) {
+export function ProfileCard({ profile, disabled, compact = false }: ProfileCardProps) {
   const { t } = useTranslation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -89,7 +90,8 @@ export function ProfileCard({ profile, disabled }: ProfileCardProps) {
     <>
       <Card
         className={cn(
-          'cursor-pointer transition-all flex flex-col h-[162px]',
+          'cursor-pointer transition-all flex',
+          compact ? 'flex-row items-center h-11 w-[350px] max-w-full shrink-0 px-2' : 'flex-col h-[180px]',
           disabled ? 'opacity-40 hover:opacity-60' : 'hover:shadow-md',
           isSelected && !disabled && 'ring-2 border-transparent ring-accent shadow-md',
         )}
@@ -100,13 +102,14 @@ export function ProfileCard({ profile, disabled }: ProfileCardProps) {
         aria-pressed={isSelected}
         onKeyDown={handleKeyDown}
       >
-        <CardHeader className="p-3 pb-2">
-          <CardTitle className="text-base font-medium">
-            <span className="break-words">{profile.name}</span>
+        <CardHeader className={compact ? "p-1 flex-1 min-w-0" : "p-3 pb-2"}>
+          <CardTitle className={compact ? "text-xs font-medium truncate" : "text-base font-medium min-h-[2.5rem] line-clamp-2"}>
+            <span className={compact ? "block truncate" : "break-words"} title={profile.name}>{profile.name}</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-3 pt-0 flex flex-col flex-1">
-          <p className="text-xs text-muted-foreground mb-1.5 line-clamp-2 leading-relaxed">
+        <CardContent className={compact ? "p-0 shrink-0" : "p-3 pt-0 flex flex-col flex-1 min-h-0"}>
+          {!compact && <>
+          <p className="text-xs text-muted-foreground mb-1.5 min-h-[2rem] line-clamp-2 leading-relaxed">
             {profile.description || t('profiles.card.noDescription')}
           </p>
           <div className="mb-2 flex items-center gap-1.5">
@@ -130,7 +133,8 @@ export function ProfileCard({ profile, disabled }: ProfileCardProps) {
               <Wand2 className="h-3.5 w-3.5 text-accent" />
             )}
           </div>
-          <div className="flex gap-0.5 justify-end items-end mt-auto">
+          </>}
+          <div className="flex gap-0.5 justify-end items-end mt-auto shrink-0">
             <CircleButton
               icon={Download}
               onClick={handleExport}

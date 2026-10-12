@@ -2,30 +2,46 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  createHashHistory,
+  lazyRouteComponent,
   Outlet,
   redirect,
 } from '@tanstack/react-router';
 import { AppFrame } from '@/components/AppFrame/AppFrame';
-import { CapturesTab } from '@/components/CapturesTab/CapturesTab';
-import { EffectsTab } from '@/components/EffectsTab/EffectsTab';
+
+
 import { MainEditor } from '@/components/MainEditor/MainEditor';
-import { ModelsTab } from '@/components/ModelsTab/ModelsTab';
-import { AboutPage } from '@/components/ServerTab/AboutPage';
-import { CapturesPage } from '@/components/ServerTab/CapturesPage';
-import { ChangelogPage } from '@/components/ServerTab/ChangelogPage';
-import { GeneralPage } from '@/components/ServerTab/GeneralPage';
-import { GenerationPage } from '@/components/ServerTab/GenerationPage';
-import { GpuPage } from '@/components/ServerTab/GpuPage';
-import { LogsPage } from '@/components/ServerTab/LogsPage';
-import { MCPPage } from '@/components/ServerTab/MCPPage';
+
+
+
+
+
+
+
+
+
 import { SettingsLayout } from '@/components/ServerTab/ServerTab';
 import { Sidebar } from '@/components/Sidebar';
-import { StoriesTab } from '@/components/StoriesTab/StoriesTab';
+
 import { Toaster } from '@/components/ui/toaster';
-import { VoicesTab } from '@/components/VoicesTab/VoicesTab';
+
 import { useGenerationProgress } from '@/lib/hooks/useGenerationProgress';
 import { useModelDownloadToast } from '@/lib/hooks/useModelDownloadToast';
 import { MODEL_DISPLAY_NAMES, useRestoreActiveTasks } from '@/lib/hooks/useRestoreActiveTasks';
+
+const CapturesTab = lazyRouteComponent(() => import('@/components/CapturesTab/CapturesTab'), 'CapturesTab');
+const EffectsTab = lazyRouteComponent(() => import('@/components/EffectsTab/EffectsTab'), 'EffectsTab');
+const ModelsTab = lazyRouteComponent(() => import('@/components/ModelsTab/ModelsTab'), 'ModelsTab');
+const AboutPage = lazyRouteComponent(() => import('@/components/ServerTab/AboutPage'), 'AboutPage');
+const CapturesPage = lazyRouteComponent(() => import('@/components/ServerTab/CapturesPage'), 'CapturesPage');
+const ChangelogPage = lazyRouteComponent(() => import('@/components/ServerTab/ChangelogPage'), 'ChangelogPage');
+const GeneralPage = lazyRouteComponent(() => import('@/components/ServerTab/GeneralPage'), 'GeneralPage');
+const GenerationPage = lazyRouteComponent(() => import('@/components/ServerTab/GenerationPage'), 'GenerationPage');
+const GpuPage = lazyRouteComponent(() => import('@/components/ServerTab/GpuPage'), 'GpuPage');
+const LogsPage = lazyRouteComponent(() => import('@/components/ServerTab/LogsPage'), 'LogsPage');
+const MCPPage = lazyRouteComponent(() => import('@/components/ServerTab/MCPPage'), 'MCPPage');
+const StoriesTab = lazyRouteComponent(() => import('@/components/StoriesTab/StoriesTab'), 'StoriesTab');
+const VoicesTab = lazyRouteComponent(() => import('@/components/VoicesTab/VoicesTab'), 'VoicesTab');
 
 // Simple platform check that works in both web and Tauri
 const isMacOS = () => navigator.platform.toLowerCase().includes('mac');
@@ -221,7 +237,7 @@ const routeTree = rootRoute.addChildren([
 ]);
 
 // Create router
-export const router = createRouter({ routeTree });
+export const router = createRouter({ routeTree, history: createHashHistory() });
 
 // Register router for type safety
 declare module '@tanstack/react-router' {

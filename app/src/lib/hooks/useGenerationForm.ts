@@ -13,7 +13,7 @@ import { useGenerationStore } from '@/stores/generationStore';
 import { useUIStore } from '@/stores/uiStore';
 
 const generationSchema = z.object({
-  text: z.string().min(1, '').max(50000),
+  text: z.string().trim().min(1, 'Escribe un texto para generar voz.').max(50000, 'El texto no puede superar 50.000 caracteres.').regex(/[\p{L}\p{N}]/u, 'El texto debe contener palabras o números.'),
   language: z.enum(LANGUAGE_CODES as [LanguageCode, ...LanguageCode[]]),
   seed: z.number().int().optional(),
   modelSize: z.enum(['1.7B', '0.6B', '1B', '3B']).optional(),
@@ -43,9 +43,10 @@ interface UseGenerationFormOptions {
 export function useGenerationForm(options: UseGenerationFormOptions = {}) {
   const { toast } = useToast();
   const generation = useGeneration();
+  const [submitting, setSubmitting] = useState(false);
   const addPendingGeneration = useGenerationStore((state) => state.addPendingGeneration);
   const { settings: genSettings } = useGenerationSettings();
-  const maxChunkChars = genSettings?.max_chunk_chars ?? 800;
+  const maxChunkChars = genSettings?.max_chunk_chars ?? 200;
   const crossfadeMs = genSettings?.crossfade_ms ?? 50;
   const normalizeAudio = genSettings?.normalize_audio ?? true;
   const selectedEngine = useUIStore((state) => state.selectedEngine);
@@ -62,9 +63,9 @@ export function useGenerationForm(options: UseGenerationFormOptions = {}) {
     resolver: zodResolver(generationSchema),
     defaultValues: {
       text: '',
-      language: 'en',
+      language: 'es',
       seed: undefined,
-      modelSize: '1.7B',
+      modelSize: '0.6B',
       instruct: '',
       engine: (selectedEngine as GenerationFormValues['engine']) || 'qwen',
       personality: false,
@@ -78,13 +79,14 @@ export function useGenerationForm(options: UseGenerationFormOptions = {}) {
   ): Promise<void> {
     if (!selectedProfileId) {
       toast({
-        title: 'No profile selected',
-        description: 'Please select a voice profile from the cards above.',
+        title: 'No hay una voz seleccionada',
+        description: 'Selecciona un perfil de voz de las tarjetas de arriba.',
         variant: 'destructive',
       });
       return;
     }
 
+    setSubmitting(true);
     try {
       const engine = data.engine || 'qwen';
       const modelName =
@@ -160,7 +162,7 @@ export function useGenerationForm(options: UseGenerationFormOptions = {}) {
       });
 
       // Track this generation for SSE status updates
-      addPendingGeneration(result.id);
+      addPendingGeneration(result.id, data.text);
 
       // Reset form immediately — user can start typing again
       form.reset({
@@ -174,12 +176,14 @@ export function useGenerationForm(options: UseGenerationFormOptions = {}) {
       });
       options.onSuccess?.(result.id);
     } catch (error) {
+      useGenerationStore.getState().finishGeneration({ id: 'request', status: 'failed', text: data.text, error: error instanceof Error ? error.message : 'No se pudo enviar el texto.' });
       toast({
-        title: 'Generation failed',
-        description: error instanceof Error ? error.message : 'Failed to generate audio',
+        title: 'No se pudo generar la voz',
+        description: error instanceof Error ? error.message : 'No se pudo generar el audio',
         variant: 'destructive',
       });
     } finally {
+      setSubmitting(false);
       setDownloadingModelName(null);
       setDownloadingDisplayName(null);
     }
@@ -188,6 +192,6 @@ export function useGenerationForm(options: UseGenerationFormOptions = {}) {
   return {
     form,
     handleSubmit,
-    isPending: generation.isPending,
+    isPending: submitting || generation.isPending,
   };
 }

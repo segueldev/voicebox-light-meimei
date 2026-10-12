@@ -167,14 +167,14 @@ function ClipVolumePopover({
           size="icon"
           className="h-7 w-7"
           title={`Volume — ${display}%`}
-          aria-label="Adjust clip volume"
+          aria-label="Ajustar volumen del clip"
         >
           <Icon className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="center" className="w-56 p-3">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-muted-foreground">Volume</span>
+          <span className="text-xs text-muted-foreground">Volumen</span>
           <span className="text-xs tabular-nums">{display}%</span>
         </div>
         <Slider
@@ -184,7 +184,7 @@ function ClipVolumePopover({
           min={0}
           max={200}
           step={1}
-          aria-label="Clip volume"
+          aria-label="Volumen del clip"
         />
         <div className="flex justify-between mt-2 text-[10px] text-muted-foreground tabular-nums">
           <span>0%</span>
@@ -278,7 +278,7 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
         {
           onError: (error) => {
             toast({
-              title: 'Failed to set version',
+              title: "No se pudo cambiar de versión",
               description: error instanceof Error ? error.message : String(error),
               variant: 'destructive',
             });
@@ -669,7 +669,7 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
         {
           onError: (error) => {
             toast({
-              title: 'Failed to trim clip',
+              title: "No se pudo recortar el clip",
               description: error instanceof Error ? error.message : String(error),
               variant: 'destructive',
             });
@@ -698,8 +698,8 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
 
     if (splitTimeMs <= 0 || splitTimeMs >= effectiveDuration) {
       toast({
-        title: 'Invalid split point',
-        description: 'Playhead must be within the selected clip',
+        title: "Punto de división no válido",
+        description: "El cursor de reproducción debe estar dentro del clip seleccionado",
         variant: 'destructive',
       });
       return;
@@ -717,7 +717,7 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
         },
         onError: (error) => {
           toast({
-            title: 'Failed to split clip',
+            title: "No se pudo dividir el clip",
             description: error instanceof Error ? error.message : String(error),
             variant: 'destructive',
           });
@@ -746,7 +746,7 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
       {
         onError: (error) => {
           toast({
-            title: 'Failed to duplicate clip',
+            title: "No se pudo duplicar el clip",
             description: error instanceof Error ? error.message : String(error),
             variant: 'destructive',
           });
@@ -769,7 +769,7 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
         },
         onError: (error) => {
           toast({
-            title: 'Failed to delete clip',
+            title: "No se pudo eliminar el clip",
             description: error instanceof Error ? error.message : String(error),
             variant: 'destructive',
           });
@@ -785,7 +785,7 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
       addPendingGeneration(selectedItem.generation_id);
     } catch (error) {
       toast({
-        title: 'Failed to regenerate',
+        title: "No se pudo volver a generar",
         description: error instanceof Error ? error.message : String(error),
         variant: 'destructive',
       });
@@ -922,7 +922,7 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
         {
           onError: (error) => {
             toast({
-              title: 'Failed to move item',
+              title: "No se pudo mover el elemento",
               description: error instanceof Error ? error.message : String(error),
               variant: 'destructive',
             });
@@ -1091,7 +1091,7 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
           type="button"
           className="absolute top-0 left-0 right-0 h-2 cursor-ns-resize flex items-center justify-center hover:bg-muted/50 transition-colors z-20 group"
           onMouseDown={handleResizeStart}
-          aria-label="Resize track editor"
+          aria-label="Cambiar tamaño del editor de pistas"
         >
           <GripHorizontal className="h-3 w-3 text-muted-foreground/50 group-hover:text-muted-foreground" />
         </button>
@@ -1105,8 +1105,8 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
               size="icon"
               className="h-7 w-7"
               onClick={handlePlayPause}
-              title="Play/Pause (Space)"
-              aria-label={isCurrentlyPlaying ? 'Pause' : 'Play'}
+              title="Reproducir o pausar (Espacio)"
+              aria-label={isCurrentlyPlaying ? "Pausar" : "Reproducir"}
             >
               {isCurrentlyPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
             </Button>
@@ -1116,7 +1116,7 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
               className="h-7 w-7"
               onClick={handleStop}
               disabled={!isCurrentlyPlaying}
-              aria-label="Stop"
+              aria-label="Detener"
             >
               <Square className="h-3 w-3" />
             </Button>
@@ -1133,8 +1133,8 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
                 size="icon"
                 className="h-7 w-7"
                 onClick={handleSplit}
-                title="Split at playhead (S)"
-                aria-label="Split at playhead"
+                title="Dividir en el cursor (S)"
+                aria-label="Dividir en el cursor"
               >
                 <Scissors className="h-4 w-4" />
               </Button>
@@ -1143,8 +1143,8 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
                 size="icon"
                 className="h-7 w-7"
                 onClick={handleDuplicate}
-                title="Duplicate (Cmd/Ctrl+D)"
-                aria-label="Duplicate clip"
+                title="Duplicar (Cmd/Ctrl+D)"
+                aria-label="Duplicar clip"
               >
                 <Copy className="h-4 w-4" />
               </Button>
@@ -1163,7 +1163,7 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
                       {
                         onError: (error) => {
                           toast({
-                            title: 'Failed to update volume',
+                            title: "No se pudo actualizar el volumen",
                             description: error instanceof Error ? error.message : String(error),
                             variant: 'destructive',
                           });
@@ -1178,8 +1178,8 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
                 size="icon"
                 className="h-7 w-7"
                 onClick={handleDelete}
-                title="Delete (Delete/Backspace)"
-                aria-label="Delete clip"
+                title="Eliminar (Supr/Retroceso)"
+                aria-label="Eliminar clip"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -1189,8 +1189,8 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
                   size="icon"
                   className="h-7 w-7"
                   onClick={handleRegenerate}
-                  title="Regenerate"
-                  aria-label="Regenerate clip"
+                  title="Volver a generar"
+                  aria-label="Volver a generar el clip"
                 >
                   <RotateCcw className="h-4 w-4" />
                 </Button>
@@ -1203,11 +1203,11 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
                       <Button
                         variant="ghost"
                         className="h-7 gap-1.5 px-2 text-xs"
-                        title="Change version/take"
+                        title="Cambiar versión o toma"
                       >
                         <GalleryVerticalEnd className="h-3.5 w-3.5" />
                         <span className="max-w-[80px] truncate">
-                          {activeVersionLabel ?? 'default'}
+                          {activeVersionLabel ?? "predeterminado"}
                         </span>
                       </Button>
                     </DropdownMenuTrigger>
@@ -1243,13 +1243,13 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
 
           {/* Zoom controls - right side */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Zoom:</span>
+            <span className="text-xs text-muted-foreground">Ampliación:</span>
             <Button
               variant="ghost"
               size="icon"
               className="h-6 w-6"
               onClick={handleZoomOut}
-              aria-label="Zoom out"
+              aria-label="Alejar"
             >
               <Minus className="h-3 w-3" />
             </Button>
@@ -1258,7 +1258,7 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
               size="icon"
               className="h-6 w-6"
               onClick={handleZoomIn}
-              aria-label="Zoom in"
+              aria-label="Acercar"
             >
               <Plus className="h-3 w-3" />
             </Button>
@@ -1286,7 +1286,7 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
               className="h-6 border-b bg-muted/20 cursor-pointer text-left relative"
               style={{ width: `${timelineWidth}px` }}
               onClick={handleTimelineClick}
-              aria-label="Seek timeline"
+              aria-label="Moverse por la línea de tiempo"
             >
               {timeMarkers.map((ms) => (
                 <div
@@ -1333,8 +1333,8 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
                       <button
                         type="button"
                         onClick={handleAddTrackAbove}
-                        title="Add track above"
-                        aria-label="Add track above"
+                        title="Añadir pista arriba"
+                        aria-label="Añadir pista arriba"
                         className="absolute top-0 right-0 left-0 h-3 flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-muted/40 transition-colors"
                       >
                         <Plus className="h-2.5 w-2.5" />
@@ -1344,8 +1344,8 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
                       <button
                         type="button"
                         onClick={handleAddTrackBelow}
-                        title="Add track below"
-                        aria-label="Add track below"
+                        title="Añadir pista abajo"
+                        aria-label="Añadir pista abajo"
                         className="absolute bottom-0 right-0 left-0 h-3 flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-muted/40 transition-colors"
                       >
                         <Plus className="h-2.5 w-2.5" />
@@ -1372,7 +1372,7 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
                 type="button"
                 className="absolute inset-0 z-0 cursor-pointer"
                 onClick={handleTimelineClick}
-                aria-label="Seek timeline"
+                aria-label="Moverse por la línea de tiempo"
               />
 
               {/* Audio clips */}
@@ -1451,14 +1451,14 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
                           type="button"
                           className="trim-handle absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-primary/30 bg-primary/20 z-30 rounded-l"
                           onMouseDown={(e) => handleTrimStart(e, item, 'start')}
-                          aria-label="Trim start"
+                          aria-label="Recortar inicio"
                         />
                         {/* Right trim handle */}
                         <button
                           type="button"
                           className="trim-handle absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-primary/30 bg-primary/20 z-30 rounded-r"
                           onMouseDown={(e) => handleTrimStart(e, item, 'end')}
-                          aria-label="Trim end"
+                          aria-label="Recortar final"
                         />
                       </>
                     )}
@@ -1495,7 +1495,7 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
               {/* biome-ignore lint/a11y/noStaticElementInteractions: mouse-driven edge handle */}
               <div
                 role="slider"
-                aria-label="Zoom from left edge"
+                aria-label="Ampliar desde el borde izquierdo"
                 aria-valuenow={Math.round(pixelsPerSecond)}
                 aria-valuemin={Math.round(minPps)}
                 aria-valuemax={Math.round(maxPps)}
@@ -1515,7 +1515,7 @@ export function StoryTrackEditor({ storyId, items }: StoryTrackEditorProps) {
               {/* biome-ignore lint/a11y/noStaticElementInteractions: mouse-driven edge handle */}
               <div
                 role="slider"
-                aria-label="Zoom from right edge"
+                aria-label="Ampliar desde el borde derecho"
                 aria-valuenow={Math.round(pixelsPerSecond)}
                 aria-valuemin={Math.round(minPps)}
                 aria-valuemax={Math.round(maxPps)}

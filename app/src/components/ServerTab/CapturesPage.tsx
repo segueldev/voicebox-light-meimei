@@ -128,9 +128,9 @@ export function CapturesPage() {
   const { data: profiles } = useProfiles();
   const { toast } = useToast();
   const readiness = useDictationReadiness();
-  const sttModel = settings?.stt_model ?? 'turbo';
-  const language = settings?.language ?? 'auto';
-  const autoRefine = settings?.auto_refine ?? true;
+  const sttModel = settings?.stt_model ?? 'small';
+  const language = settings?.language ?? 'es';
+  const autoRefine = settings?.auto_refine ?? false;
   const llmModel = settings?.llm_model ?? '0.6B';
   const smartCleanup = settings?.smart_cleanup ?? true;
   const selfCorrection = settings?.self_correction ?? true;
@@ -176,7 +176,7 @@ export function CapturesPage() {
   return (
     <div className="flex gap-8 items-start max-w-5xl">
       <div className="flex-1 min-w-0 max-w-2xl space-y-10">
-      <SettingSection
+      {platform.metadata.isTauri && (<SettingSection
         title={t('settings.captures.dictation.title')}
         description={t('settings.captures.dictation.description')}
       >
@@ -306,7 +306,7 @@ export function CapturesPage() {
           />
           <AccessibilityNotice />
         </div>
-      </SettingSection>
+      </SettingSection>)}
 
       <SettingSection
         title={t('settings.captures.transcription.title')}
@@ -330,15 +330,15 @@ export function CapturesPage() {
                 <SelectItem value="small">
                   {t('settings.captures.transcription.model.small', { tail: t('settings.captures.transcription.model.tail.balanced') })}
                 </SelectItem>
-                <SelectItem value="medium">
+                {!import.meta.env.VITE_LOW_MEMORY && (<SelectItem value="medium" disabled={!!import.meta.env.VITE_LOW_MEMORY}>
                   {t('settings.captures.transcription.model.medium', { tail: t('settings.captures.transcription.model.tail.higher') })}
-                </SelectItem>
-                <SelectItem value="large">
+                </SelectItem>)}
+                {!import.meta.env.VITE_LOW_MEMORY && (<SelectItem value="large" disabled={!!import.meta.env.VITE_LOW_MEMORY}>
                   {t('settings.captures.transcription.model.large', { tail: t('settings.captures.transcription.model.tail.best') })}
-                </SelectItem>
-                <SelectItem value="turbo">
+                </SelectItem>)}
+                {!import.meta.env.VITE_LOW_MEMORY && (<SelectItem value="turbo" disabled={!!import.meta.env.VITE_LOW_MEMORY}>
                   {t('settings.captures.transcription.model.turbo', { tail: t('settings.captures.transcription.model.tail.nearBest') })}
-                </SelectItem>
+                </SelectItem>)}
               </SelectContent>
             </Select>
           }
@@ -368,7 +368,7 @@ export function CapturesPage() {
 
       </SettingSection>
 
-      <SettingSection
+      {!import.meta.env.VITE_LOW_MEMORY && (<SettingSection
         title={t('settings.captures.refinement.title')}
         description={t('settings.captures.refinement.description')}
       >
@@ -379,6 +379,7 @@ export function CapturesPage() {
           action={
             <Toggle
               id="autoRefine"
+              disabled={!!import.meta.env.VITE_LOW_MEMORY}
               checked={autoRefine}
               onCheckedChange={(v) => update({ auto_refine: v })}
             />
@@ -453,7 +454,7 @@ export function CapturesPage() {
             />
           }
         />
-      </SettingSection>
+      </SettingSection>)}
 
       <SettingSection
         title={t('settings.captures.playback.title')}
@@ -513,7 +514,7 @@ export function CapturesPage() {
         />
       </SettingSection>
 
-      <SettingSection
+      {platform.metadata.isTauri && (<SettingSection
         title={t('settings.captures.storage.title')}
         description={t('settings.captures.storage.description')}
       >
@@ -532,10 +533,10 @@ export function CapturesPage() {
             </Button>
           }
         />
-      </SettingSection>
+      </SettingSection>)}
       </div>
 
-      <aside className="hidden lg:block w-[280px] shrink-0 space-y-6 sticky top-0">
+      {!import.meta.env.VITE_LOCAL_DESKTOP && (<aside className="hidden lg:block w-[280px] shrink-0 space-y-6 sticky top-0">
         <div className="space-y-2">
           <h3 className="text-sm font-semibold">{t('settings.captures.sidebar.aboutTitle')}</h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
@@ -600,7 +601,7 @@ export function CapturesPage() {
             <DictationReadinessChecklist readiness={readiness} compact />
           </div>
         )}
-      </aside>
+      </aside>)}
     </div>
   );
 }

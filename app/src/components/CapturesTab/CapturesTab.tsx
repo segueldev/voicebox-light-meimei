@@ -162,7 +162,7 @@ export function CapturesTab() {
   const { settings: captureSettings, update: updateCaptureSettings } = useCaptureSettings();
   const sttModel = captureSettings?.stt_model ?? 'turbo';
   const llmModel = captureSettings?.llm_model ?? '0.6B';
-  const hotkeyEnabled = captureSettings?.hotkey_enabled ?? false;
+  const hotkeyEnabled = !import.meta.env.VITE_LOCAL_DESKTOP && (captureSettings?.hotkey_enabled ?? false);
   const pushToTalkKeys = captureSettings?.chord_push_to_talk_keys ?? [];
   const toggleToTalkKeys = captureSettings?.chord_toggle_to_talk_keys ?? [];
   const readiness = useDictationReadiness();
@@ -640,7 +640,7 @@ export function CapturesTab() {
             {/* Transcript header */}
             <div className="flex items-center gap-3 mb-3">
               <div className="inline-flex rounded-md bg-muted/40 p-0.5 border border-border">
-                <button
+                {!import.meta.env.VITE_LOW_MEMORY && (<button
                   type="button"
                   onClick={() => setShowRefined(true)}
                   disabled={!selected.transcript_refined}
@@ -653,7 +653,7 @@ export function CapturesTab() {
                 >
                   <Sparkles className="h-3 w-3 inline-block mr-1 -translate-y-px" />
                   {t('captures.transcript.refined')}
-                </button>
+                </button>)}
                 <button
                   type="button"
                   onClick={() => setShowRefined(false)}
@@ -771,7 +771,7 @@ export function CapturesTab() {
                 <Copy className="h-3.5 w-3.5 mr-1.5" />
                 {t('captures.actions.copy')}
               </Button>
-              <Button
+              {!import.meta.env.VITE_LOW_MEMORY && (<Button
                 variant="outline"
                 size="sm"
                 onClick={() => session.refine(selected.id)}
@@ -785,7 +785,7 @@ export function CapturesTab() {
                 {selected.transcript_refined
                   ? t('captures.actions.reRefine')
                   : t('captures.actions.refine')}
-              </Button>
+              </Button>)}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">

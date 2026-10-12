@@ -26,6 +26,10 @@ from ..database import get_db
 from ..utils.tasks import get_task_manager
 
 
+from ..utils.runtime_memory import serialized_model_work, release_other_tts_engines
+
+
+@serialized_model_work
 async def run_generation(
     *,
     generation_id: str,
@@ -56,6 +60,7 @@ async def run_generation(
     bg_db = next(get_db())
 
     try:
+        release_other_tts_engines(engine)
         tts_model = get_tts_backend_for_engine(engine)
 
         if not tts_model.is_loaded():
@@ -85,6 +90,10 @@ async def run_generation(
             gen_kwargs["crossfade_ms"] = crossfade_ms
 
         audio, sample_rate = await generate_chunked(tts_model, text, voice_prompt, **gen_kwargs)
+
+        import numpy as np
+        if audio.size == 0 or not np.isfinite(audio).all() or float(np.max(np.abs(audio))) < 1e-6:
+            raise ValueError("El modelo no produjo una voz válida. Prueba con una frase completa y revisa el perfil de voz.")
 
         # --- Normalize (generate and regenerate always; retry skips) -----
         if normalize or mode == "regenerate":

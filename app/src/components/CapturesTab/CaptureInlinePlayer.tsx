@@ -137,7 +137,7 @@ export function CaptureInlinePlayer({
         className="h-10 w-10 rounded-full shrink-0"
         onClick={handlePlayPause}
         disabled={isLoading || !!error}
-        aria-label={isPlaying ? 'Pause' : 'Play'}
+        aria-label={isPlaying ? "Pausar" : "Reproducir"}
       >
         {isLoading ? (
           <Loader2 className="h-4 w-4 animate-spin" />

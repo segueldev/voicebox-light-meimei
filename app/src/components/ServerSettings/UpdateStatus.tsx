@@ -21,9 +21,9 @@ export function UpdateStatus() {
   }, [platform]);
 
   return (
-    <Card role="region" aria-label="App Updates" tabIndex={0}>
+    <Card role="region" aria-label="Actualizaciones de la aplicación" tabIndex={0}>
       <CardHeader>
-        <CardTitle>App Updates</CardTitle>
+        <CardTitle>Actualizaciones de la aplicación</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
@@ -31,7 +31,7 @@ export function UpdateStatus() {
             <div className="text-sm font-medium">Current Version</div>
             <div className="text-sm text-muted-foreground">
               v{currentVersion}
-              {isDev ? ' (dev)' : ''}
+              {isDev ? " (desarrollo)" : ''}
             </div>
           </div>
           {!isDev && (
@@ -42,22 +42,19 @@ export function UpdateStatus() {
               size="sm"
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${status.checking ? 'animate-spin' : ''}`} />
-              Check for Updates
-            </Button>
+              Buscar actualizaciones</Button>
           )}
         </div>
 
         {isDev ? (
           <div className="text-sm text-muted-foreground">
-            Auto-updates are disabled in development mode.
-          </div>
+            Las actualizaciones automáticas están desactivadas en modo de desarrollo.</div>
         ) : (
           <>
             {status.checking && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <RefreshCw className="h-4 w-4 animate-spin" />
-                Checking for updates...
-              </div>
+                Buscando actualizaciones…</div>
             )}
 
             {status.error && (
@@ -71,15 +68,14 @@ export function UpdateStatus() {
               <div className="space-y-3 p-4 border rounded-lg bg-primary/5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-semibold">Update Available</div>
-                    <div className="text-sm text-muted-foreground">Version {status.version}</div>
+                    <div className="font-semibold">Actualización disponible</div>
+                    <div className="text-sm text-muted-foreground">Versión{status.version}</div>
                   </div>
-                  <Badge>New</Badge>
+                  <Badge>Nuevo</Badge>
                 </div>
                 <Button onClick={downloadAndInstall} className="w-full" size="sm">
                   <Download className="h-4 w-4 mr-2" />
-                  Download Update
-                </Button>
+                  Descargar actualización</Button>
               </div>
             )}
 
@@ -88,8 +84,7 @@ export function UpdateStatus() {
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
                     <Download className="h-4 w-4" />
-                    Downloading update...
-                  </div>
+                    Descargando actualización…</div>
                   {status.downloadProgress !== undefined && (
                     <span className="text-muted-foreground">{status.downloadProgress}%</span>
                   )}
@@ -110,10 +105,9 @@ export function UpdateStatus() {
               <div className="space-y-3 p-4 border rounded-lg bg-accent/30 border-accent/50">
                 <div className="flex items-center gap-2">
                   <div>
-                    <div className="font-semibold">Update Ready to Install</div>
+                    <div className="font-semibold">Actualización lista para instalar</div>
                     <div className="text-sm text-muted-foreground">
-                      Version {status.version} has been downloaded
-                    </div>
+                      Versión{status.version} se ha descargado</div>
                   </div>
                 </div>
                 <div className="text-sm text-muted-foreground">
@@ -122,15 +116,13 @@ export function UpdateStatus() {
                 </div>
                 <Button onClick={restartAndInstall} className="w-full" size="sm">
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  Restart Now
-                </Button>
+                  Reiniciar ahora</Button>
               </div>
             )}
 
             {!status.available && !status.checking && !status.error && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                You're up to date
-              </div>
+                Tienes la versión más reciente</div>
             )}
           </>
         )}

@@ -1,5 +1,5 @@
 import { Sparkles, Upload } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FloatingGenerateBox } from '@/components/Generation/FloatingGenerateBox';
 import { HistoryTable } from '@/components/History/HistoryTable';
@@ -16,15 +16,31 @@ import { useToast } from '@/components/ui/use-toast';
 import { ProfileList } from '@/components/VoiceProfiles/ProfileList';
 
 import { useImportProfile } from '@/lib/hooks/useProfiles';
-import { cn } from '@/lib/utils/cn';
+import { useLayoutStore } from '@/stores/layoutStore';
 import { usePlayerStore } from '@/stores/playerStore';
 import { useUIStore } from '@/stores/uiStore';
 
 export function MainEditor() {
   const { t } = useTranslation();
+  const playerHeight = useLayoutStore((s) => s.playerHeight);
   const audioUrl = usePlayerStore((state) => state.audioUrl);
-  const isPlayerVisible = !!audioUrl;
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const scrollHistory = (event: WheelEvent) => {
+      const target = event.target as HTMLElement;
+      if (target.closest('[data-history-scroll],textarea,input,[role="slider"],[data-generation-feedback]')) return;
+      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+      const history = root.querySelector<HTMLElement>('[data-history-scroll]');
+      if (!history || history.scrollHeight <= history.clientHeight) return;
+      event.preventDefault();
+      const scale = event.deltaMode === 1 ? 20 : event.deltaMode === 2 ? history.clientHeight : 1;
+      history.scrollTop += event.deltaY * scale;
+    };
+    root.addEventListener('wheel', scrollHistory, { passive: false });
+    return () => root.removeEventListener('wheel', scrollHistory);
+  }, []);
   const setDialogOpen = useUIStore((state) => state.setProfileDialogOpen);
   const importProfile = useImportProfile();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -78,13 +94,13 @@ export function MainEditor() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-6 h-full min-h-0 overflow-hidden relative">
-      <div className="flex flex-col min-h-0 overflow-hidden relative lg:overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-background to-transparent z-0 pointer-events-none" />
+    <div ref={rootRef} style={{ paddingBottom: playerHeight ? playerHeight + 8 : 8 }} className="flex flex-col h-full min-h-0 overflow-hidden relative">
+      <div className="shrink-0 flex flex-col overflow-hidden relative">
 
-        <div className="absolute top-0 left-0 right-0 z-10">
+
+        <div className="shrink-0">
           <div className="flex items-center justify-between mb-4 px-1">
-            <h2 className="text-2xl font-bold">Voicebox</h2>
+            <div><h2 className="text-2xl font-bold">Voice Box</h2><p className="text-sm text-muted-foreground">Edición Light Meimei</p></div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleImportClick}>
                 <Upload className="mr-2 h-4 w-4" />
@@ -105,23 +121,21 @@ export function MainEditor() {
           </div>
         </div>
 
-        <div
-          ref={scrollRef}
-          className={cn('flex-1 min-h-0 overflow-y-auto pt-14 pb-4', isPlayerVisible && 'lg:pb-32')}
-        >
+<div className="shrink-0 pb-3" data-voice-strip>
           <div className="flex flex-col gap-6">
             <div className="shrink-0 flex flex-col">
-              <ProfileList />
+              <ProfileList compact />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <h2 className="text-sm font-semibold py-2">Audios generados</h2>
         <HistoryTable />
       </div>
 
-      <FloatingGenerateBox isPlayerOpen={!!audioUrl} />
+      <FloatingGenerateBox isPlayerOpen={!!audioUrl} docked />
 
       <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
         <DialogContent>

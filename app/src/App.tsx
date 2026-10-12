@@ -1,3 +1,4 @@
+import { MotionConfig } from 'framer-motion';
 import { RouterProvider } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
 import voiceboxLogo from '@/assets/voicebox-logo.png';
@@ -52,28 +53,7 @@ function isPortInUseError(error: unknown): boolean {
   );
 }
 
-const LOADING_MESSAGES = [
-  'Warming up tensors...',
-  'Calibrating synthesizer engine...',
-  'Initializing voice models...',
-  'Loading neural networks...',
-  'Preparing audio pipelines...',
-  'Optimizing waveform generators...',
-  'Tuning frequency analyzers...',
-  'Building voice embeddings...',
-  'Configuring text-to-speech cores...',
-  'Syncing audio buffers...',
-  'Establishing model connections...',
-  'Preprocessing training data...',
-  'Validating voice samples...',
-  'Compiling inference engines...',
-  'Mapping phoneme sequences...',
-  'Aligning prosody parameters...',
-  'Activating speech synthesis...',
-  'Fine-tuning acoustic models...',
-  'Preparing voice cloning matrices...',
-  'Initializing Qwen TTS framework...',
-];
+const LOADING_MESSAGES = ['Preparando Voicebox…', 'Cargando el servidor local…', 'Preparando los modelos de voz…'];
 
 function App() {
   useThemeSync();
@@ -302,7 +282,7 @@ function MainApp() {
     );
   }
 
-  return <RouterProvider router={router} />;
+  return <MotionConfig reducedMotion={import.meta.env.VITE_LOW_MEMORY ? 'always' : 'user'}><RouterProvider router={router} /></MotionConfig>;
 }
 
 export default App;

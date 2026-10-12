@@ -389,6 +389,10 @@ async def trigger_model_download(request: models.ModelDownloadRequest):
     """Trigger download of a specific model."""
     from ..backends import get_model_config, get_model_load_func
 
+    import os
+    if os.environ.get("VOICEBOX_LOW_MEMORY") == "1" and request.model_name not in {"qwen-tts-0.6B", "kokoro", "whisper-base", "whisper-small"}:
+        raise HTTPException(status_code=400, detail="Esta instalación está preparada para Qwen 0.6B, Kokoro y Whisper Base o Small. Los otros modelos requieren otra configuración y más memoria.")
+
     task_manager = get_task_manager()
     progress_manager = get_progress_manager()
 
@@ -398,13 +402,20 @@ async def trigger_model_download(request: models.ModelDownloadRequest):
 
     load_func = get_model_load_func(config)
 
+    from ..utils.runtime_memory import serialized_model_work
+
+    @serialized_model_work
     async def download_in_background():
         try:
+            from ..utils.runtime_memory import release_other_tts_engines
+            release_other_tts_engines(config.engine)
             result = load_func()
             if asyncio.iscoroutine(result):
                 await result
+            progress_manager.mark_complete(request.model_name)
             task_manager.complete_download(request.model_name)
         except Exception as e:
+            progress_manager.mark_error(request.model_name, str(e))
             task_manager.error_download(request.model_name, str(e))
 
     task_manager.start_download(request.model_name)

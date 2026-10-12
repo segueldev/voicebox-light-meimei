@@ -24,19 +24,26 @@ import { cn } from '@/lib/utils/cn';
 import { useGenerationStore } from '@/stores/generationStore';
 import { useStoryStore } from '@/stores/storyStore';
 import { useUIStore } from '@/stores/uiStore';
+import { GenerationFeedback } from './GenerationFeedback';
+import { useLayoutStore } from '@/stores/layoutStore';
+import { usePanelHeight } from '@/lib/hooks/usePanelHeight';
 import { EngineModelSelector } from './EngineModelSelector';
 import { ParalinguisticInput } from './ParalinguisticInput';
 
 interface FloatingGenerateBoxProps {
   isPlayerOpen?: boolean;
   showVoiceSelector?: boolean;
+  docked?: boolean;
 }
 
 export function FloatingGenerateBox({
   isPlayerOpen = false,
   showVoiceSelector = false,
+  docked = false,
 }: FloatingGenerateBoxProps) {
   const { t } = useTranslation();
+  const generating = useGenerationStore((state) => state.isGenerating);
+  const busy = generating;
   const selectedProfileId = useUIStore((state) => state.selectedProfileId);
   const setSelectedProfileId = useUIStore((state) => state.setSelectedProfileId);
   const setSelectedEngine = useUIStore((state) => state.setSelectedEngine);
@@ -46,6 +53,9 @@ export function FloatingGenerateBox({
   const [isInstructExpanded, setIsInstructExpanded] = useState(false);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const playerHeight = useLayoutStore((s) => s.playerHeight);
+  const setComposerHeight = useLayoutStore((s) => s.setComposerHeight);
+  usePanelHeight(containerRef, setComposerHeight);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const matchRoute = useMatchRoute();
   const isStoriesRoute = matchRoute({ to: '/stories' });
@@ -204,7 +214,7 @@ export function FloatingGenerateBox({
       const timeoutId = setTimeout(() => {
         const textarea = textareaRef.current;
         if (textarea) {
-          textarea.style.height = '32px';
+          textarea.style.height = '44px';
           textarea.style.overflowY = 'hidden';
         }
       }, 200); // Wait for animation to complete
@@ -254,29 +264,36 @@ export function FloatingGenerateBox({
   return (
     <motion.div
       ref={containerRef}
+      data-generation-composer
       className={cn(
-        'fixed',
-        isStoriesRoute
+        docked ? 'shrink-0 relative mt-3' : 'fixed z-30',
+        docked ? 'w-full' : isStoriesRoute
           ? // Aligned with StoryContent: sidebar + list width + gap (tab bleeds with -mx-8)
             'left-[calc(5rem+360px+1.5rem)] right-8'
-          : 'left-[calc(5rem+2rem)] right-8 lg:right-auto lg:w-[calc((100%-5rem-4rem)/2-1rem)]',
+          : 'left-[calc(5rem+2rem)] right-8',
       )}
       style={{
         // On stories route: offset by track editor height when visible
         // On other routes: offset by audio player height when visible
-        bottom: hasTrackEditor
+        bottom: docked ? undefined : hasTrackEditor
           ? `${trackEditorHeight + 24}px`
           : isPlayerOpen
-            ? 'calc(7rem + 1.5rem)'
+            ? `${playerHeight + 24}px`
             : '1.5rem',
       }}
     >
       <motion.div
-        className="bg-background/30 backdrop-blur-2xl border border-accent/20 rounded-[2rem] shadow-2xl hover:bg-background/40 hover:border-accent/20 transition-all duration-300 p-3"
+        className={cn(
+          'border border-accent/20 rounded-[2rem] shadow-2xl hover:border-accent/30 transition-all duration-300 p-3',
+          import.meta.env.VITE_LOW_MEMORY
+            ? 'bg-background'
+            : 'bg-background/30 backdrop-blur-2xl hover:bg-background/40',
+        )}
         transition={{ duration: 0.6, ease: 'easeInOut' }}
       >
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
+            <GenerationFeedback submitting={isPending} onRestoreText={(text) => { form.setValue('text', text); setIsExpanded(true); }} />
             <div className="flex gap-2">
               <motion.div className="flex-1" transition={{ duration: 0.3, ease: 'easeOut' }}>
                 <FormField
@@ -287,7 +304,7 @@ export function FloatingGenerateBox({
                       <FormControl>
                         <motion.div
                           animate={{
-                            height: isExpanded ? 'auto' : '32px',
+                            height: isExpanded ? 'auto' : '44px',
                           }}
                           transition={{ duration: 0.15, ease: 'easeOut' }}
                           style={{ overflow: 'hidden' }}
@@ -307,7 +324,7 @@ export function FloatingGenerateBox({
                               }
                               className="px-3 py-2 resize-none bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 outline-none ring-0 rounded-2xl text-sm w-full"
                               style={{
-                                minHeight: isExpanded ? '100px' : '32px',
+                                minHeight: isExpanded ? '100px' : '44px',
                                 maxHeight: '300px',
                                 overflowY: 'auto',
                               }}
@@ -333,9 +350,9 @@ export function FloatingGenerateBox({
                                       })
                                     : t('generation.placeholder.selectVoice')
                               }
-                              className="resize-none bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 outline-none ring-0 rounded-2xl text-sm placeholder:text-muted-foreground/60 w-full"
+                              className="resize-none bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 outline-none ring-0 rounded-2xl text-sm placeholder:text-muted-foreground w-full"
                               style={{
-                                minHeight: isExpanded ? '100px' : '32px',
+                                minHeight: isExpanded ? '100px' : '44px',
                                 maxHeight: '300px',
                               }}
                               disabled={!selectedProfileId}
@@ -354,7 +371,7 @@ export function FloatingGenerateBox({
               <div className="flex items-start gap-2 shrink-0">
                 {/* Compose — fills the textarea with a fresh in-character line. */}
                 <AnimatePresence>
-                  {selectedProfile?.personality?.trim() && (
+                  {!import.meta.env.VITE_LOW_MEMORY && selectedProfile?.personality?.trim() && (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
@@ -391,7 +408,7 @@ export function FloatingGenerateBox({
 
                 {/* Persona — rewrite input through the profile's personality LLM before TTS. */}
                 <AnimatePresence>
-                  {selectedProfile?.personality?.trim() && (
+                  {!import.meta.env.VITE_LOW_MEMORY && selectedProfile?.personality?.trim() && (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
@@ -477,25 +494,26 @@ export function FloatingGenerateBox({
                 <div className="group relative">
                   <Button
                     type="submit"
-                    disabled={isPending || !selectedProfileId}
-                    className="h-10 w-10 rounded-full bg-accent hover:bg-accent/90 hover:scale-105 text-accent-foreground shadow-lg hover:shadow-accent/50 transition-all duration-200"
-                    size="icon"
+                    disabled={isPending || busy || !selectedProfileId}
+                    className="h-10 px-3 rounded-full bg-accent hover:bg-accent/90 text-accent-foreground shadow-lg transition-all duration-200"
+                    size="sm"
                     aria-label={
-                      isPending
+                      (isPending || busy)
                         ? t('generation.button.generating')
                         : !selectedProfileId
                           ? t('generation.button.selectFirst')
                           : t('generation.button.generate')
                     }
                   >
-                    {isPending ? (
+                    {isPending || busy ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       <Sparkles className="h-4 w-4" />
                     )}
+                    <span className="ml-2">{isPending || busy ? 'Generando…' : 'Generar voz'}</span>
                   </Button>
                   <span className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 whitespace-nowrap rounded-md bg-popover px-3 py-1.5 text-xs text-popover-foreground border border-border opacity-0 transition-opacity group-hover:opacity-100 z-[9999]">
-                    {isPending
+                    {isPending || busy
                       ? t('generation.button.generating')
                       : !selectedProfileId
                         ? t('generation.button.selectFirst')
@@ -524,7 +542,7 @@ export function FloatingGenerateBox({
                           <Textarea
                             {...field}
                             placeholder={t('generation.instruct.placeholder')}
-                            className="resize-none bg-transparent border border-accent/20 focus-visible:ring-1 focus-visible:ring-accent/40 rounded-2xl text-sm placeholder:text-muted-foreground/60 w-full px-3 py-2"
+                            className="resize-none bg-transparent border border-accent/20 focus-visible:ring-1 focus-visible:ring-accent/40 rounded-2xl text-sm placeholder:text-muted-foreground w-full px-3 py-2"
                             style={{ minHeight: '60px', maxHeight: '160px' }}
                             maxLength={500}
                           />

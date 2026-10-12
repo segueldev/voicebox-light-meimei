@@ -57,15 +57,15 @@ export function ConnectionForm() {
     setServerUrl(data.serverUrl);
     form.reset(data);
     toast({
-      title: 'Server URL updated',
+      title: "Dirección del servidor actualizada",
       description: `Connected to ${data.serverUrl}`,
     });
   }
 
   return (
-    <Card role="region" aria-label="Server Connection" tabIndex={0}>
+    <Card role="region" aria-label="Conexión al servidor" tabIndex={0}>
       <CardHeader>
-        <CardTitle>Server Connection</CardTitle>
+        <CardTitle>Conexión al servidor</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -75,17 +75,17 @@ export function ConnectionForm() {
               name="serverUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Server URL</FormLabel>
+                  <FormLabel>Dirección del servidor</FormLabel>
                   <FormControl>
                     <Input placeholder="http://127.0.0.1:17493" {...field} />
                   </FormControl>
-                  <FormDescription>Enter the URL of your voicebox backend server</FormDescription>
+                  <FormDescription>Escribe la dirección del servidor de Voicebox</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            {isDirty && <Button type="submit">Update Connection</Button>}
+            {isDirty && <Button type="submit">Actualizar conexión</Button>}
           </form>
         </Form>
 
@@ -94,13 +94,13 @@ export function ConnectionForm() {
           {isLoading ? (
             <div className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm text-muted-foreground">Checking connection...</span>
+              <span className="text-sm text-muted-foreground">Comprobando conexión…</span>
             </div>
           ) : healthError ? (
             <div className="flex items-center gap-2">
               <XCircle className="h-4 w-4 text-destructive" />
               <span className="text-sm text-destructive">
-                Connection failed: {healthError.message}
+                Error de conexión:{healthError.message}
               </span>
             </div>
           ) : health ? (
@@ -108,7 +108,7 @@ export function ConnectionForm() {
               <Badge
                 variant={health.model_loaded || health.model_downloaded ? 'default' : 'secondary'}
               >
-                {health.model_loaded || health.model_downloaded ? 'Model Ready' : 'No Model'}
+                {health.model_loaded || health.model_downloaded ? "Modelo listo" : "Sin modelo"}
               </Badge>
               <Badge variant={health.gpu_available ? 'default' : 'secondary'}>
                 GPU: {health.gpu_available ? 'Available' : 'Not Available'}
@@ -132,10 +132,10 @@ export function ConnectionForm() {
                   console.error('Failed to sync setting to Rust:', error);
                 });
                 toast({
-                  title: 'Setting updated',
+                  title: "Configuración actualizada",
                   description: checked
-                    ? 'Server will continue running when app closes'
-                    : 'Server will stop when app closes',
+                    ? "El servidor seguirá funcionando al cerrar la aplicación"
+                    : "El servidor se detendrá al cerrar la aplicación",
                 });
               }}
             />
@@ -144,8 +144,7 @@ export function ConnectionForm() {
                 htmlFor="keepServerRunning"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
               >
-                Keep server running when app closes
-              </label>
+                Mantener el servidor al cerrar la aplicación</label>
               <p className="text-sm text-muted-foreground">
                 When enabled, the server will continue running in the background after closing the
                 app. Disabled by default.
@@ -164,10 +163,10 @@ export function ConnectionForm() {
                 onCheckedChange={(checked: boolean) => {
                   setMode(checked ? 'remote' : 'local');
                   toast({
-                    title: 'Setting updated',
+                    title: "Configuración actualizada",
                     description: checked
-                      ? 'Network access enabled. Restart the app to apply.'
-                      : 'Network access disabled. Restart the app to apply.',
+                      ? "Acceso desde la red activado. Reinicia la aplicación para aplicarlo."
+                      : "Acceso desde la red desactivado. Reinicia la aplicación para aplicarlo.",
                   });
                 }}
               />
@@ -176,8 +175,7 @@ export function ConnectionForm() {
                   htmlFor="allowNetworkAccess"
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                 >
-                  Allow network access
-                </label>
+                  Permitir acceso desde la red</label>
                 <p className="text-sm text-muted-foreground">
                   Makes the server accessible from other devices on your network. Restart the app
                   after changing this setting.

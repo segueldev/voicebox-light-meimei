@@ -8,6 +8,8 @@ import { apiClient } from '@/lib/api/client';
 import { formatAudioDuration } from '@/lib/utils/audio';
 import { debug } from '@/lib/utils/debug';
 import { usePlatform } from '@/platform/PlatformContext';
+import { useLayoutStore } from '@/stores/layoutStore';
+import { usePanelHeight } from '@/lib/hooks/usePanelHeight';
 import { usePlayerStore } from '@/stores/playerStore';
 
 export function AudioPlayer() {
@@ -16,6 +18,7 @@ export function AudioPlayer() {
   const {
     audioUrl,
     audioId,
+    title,
     profileId,
     isPlaying,
     currentTime,
@@ -64,6 +67,9 @@ export function AudioPlayer() {
     return shouldUseNative;
   }, [profileChannels, channels, platform.metadata.isTauri]);
 
+  const panelRef = useRef<HTMLDivElement>(null);
+  const setPlayerHeight = useLayoutStore((s) => s.setPlayerHeight);
+  usePanelHeight(panelRef, setPlayerHeight, !!audioUrl);
   const waveformRef = useRef<HTMLDivElement>(null);
   const wavesurferRef = useRef<WaveSurfer | null>(null);
   const loadingRef = useRef(false);
@@ -72,7 +78,10 @@ export function AudioPlayer() {
   const isUsingNativePlaybackRef = useRef(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [playbackNotice, setPlaybackNotice] = useState<string | null>(null);
   const [wsReady, setWsReady] = useState(false);
+
+  useEffect(() => { usePlayerStore.getState().setPlaybackError(error); }, [error]);
 
   // Create WaveSurfer once when the player becomes visible (audioUrl is set).
   // This instance is reused for all subsequent audio loads - never destroyed until unmount.
@@ -120,12 +129,12 @@ export function AudioPlayer() {
           cursorWidth: 3,
           barWidth: 2,
           barRadius: 2,
-          height: 80,
+          height: 56,
           normalize: true,
           interact: true,
           dragToSeek: { debounceTime: 0 },
           mediaControls: false,
-          backend: 'WebAudio',
+          backend: import.meta.env.VITE_LOCAL_DESKTOP ? 'MediaElement' : 'WebAudio',
         });
 
         // Wire up event handlers (these persist for the lifetime of the instance)
@@ -161,15 +170,18 @@ export function AudioPlayer() {
           const shouldAutoPlayNow = usePlayerStore.getState().shouldAutoPlay;
           if (shouldAutoPlayNow) {
             usePlayerStore.getState().clearAutoPlayFlag();
+            setIsPlaying(true);
             wavesurfer.play().catch((err) => {
               debug.error('Failed to autoplay:', err);
+              setIsPlaying(false);
+              setPlaybackNotice('Audio listo. Pulsa Reproducir para escucharlo.');
             });
           } else {
             debug.log('Skipping auto-play - shouldAutoPlay is false');
           }
         });
 
-        wavesurfer.on('play', () => setIsPlaying(true));
+        wavesurfer.on('play', () => { setPlaybackNotice(null); setIsPlaying(true); });
         wavesurfer.on('pause', () => {
           setIsPlaying(false);
           setCurrentTime(wavesurfer.getCurrentTime());
@@ -194,6 +206,7 @@ export function AudioPlayer() {
           });
         }
         wavesurfer.on('finish', () => {
+          setCurrentTime(wavesurfer.getDuration());
           const loop = usePlayerStore.getState().isLooping;
           if (loop) {
             wavesurfer.seekTo(0);
@@ -208,7 +221,7 @@ export function AudioPlayer() {
         wavesurfer.on('error', (err) => {
           debug.error('WaveSurfer error:', err);
           setIsLoading(false);
-          setError(`Audio error: ${err instanceof Error ? err.message : String(err)}`);
+          setError('No se pudo cargar el audio. Inténtalo de nuevo.');
         });
 
         wavesurfer.on('loading', (percent) => {
@@ -222,7 +235,7 @@ export function AudioPlayer() {
       } catch (err) {
         debug.error('Failed to create WaveSurfer:', err);
         setError(
-          `Failed to initialize waveform: ${err instanceof Error ? err.message : String(err)}`,
+          `No se pudo preparar el reproductor: ${err instanceof Error ? err.message : String(err)}`,
         );
       }
     };
@@ -282,6 +295,7 @@ export function AudioPlayer() {
     // Stop current playback and reset position before loading new audio.
     // With the WebAudio backend, pause() accumulates playedDuration internally.
     // seekTo(0) resets it so the new track starts from the beginning.
+    setPlaybackNotice(null);
     debug.log('Loading new audio URL:', audioUrl);
     try {
       if (wavesurfer.isPlaying()) {
@@ -308,7 +322,7 @@ export function AudioPlayer() {
         debug.error('Failed to load audio:', err);
         loadingRef.current = false;
         setIsLoading(false);
-        setError(`Failed to load audio: ${err instanceof Error ? err.message : String(err)}`);
+        setError('No se pudo cargar el audio. Inténtalo de nuevo.');
       });
   }, [audioUrl, wsReady, setCurrentTime, setDuration]);
 
@@ -317,13 +331,14 @@ export function AudioPlayer() {
   useEffect(() => {
     if (!wavesurferRef.current || duration === 0) return;
 
-    if (isPlaying && wavesurferRef.current.isPlaying() === false) {
+    const requestedPlaying = usePlayerStore.getState().isPlaying;
+    if (requestedPlaying && wavesurferRef.current.isPlaying() === false) {
       wavesurferRef.current.play().catch((error) => {
         debug.error('Failed to play:', error);
         setIsPlaying(false);
-        setError(`Playback error: ${error instanceof Error ? error.message : String(error)}`);
+        setError('No se pudo reproducir el audio. Pulsa Reproducir para intentarlo de nuevo.');
       });
-    } else if (!isPlaying && wavesurferRef.current.isPlaying()) {
+    } else if (!requestedPlaying && wavesurferRef.current.isPlaying()) {
       wavesurferRef.current.pause();
     }
   }, [isPlaying, setIsPlaying, duration]);
@@ -361,7 +376,7 @@ export function AudioPlayer() {
     wavesurfer.play().catch((error) => {
       debug.error('Failed to play after restart:', error);
       setIsPlaying(false);
-      setError(`Playback error: ${error instanceof Error ? error.message : String(error)}`);
+      setError('No se pudo reproducir el audio. Pulsa Reproducir para intentarlo de nuevo.');
     });
 
     clearRestartFlag();
@@ -458,7 +473,7 @@ export function AudioPlayer() {
           wavesurferRef.current.play().catch((error) => {
             debug.error('Failed to start WaveSurfer visualization:', error);
             setIsPlaying(false);
-            setError(`Playback error: ${error instanceof Error ? error.message : String(error)}`);
+            setError('No se pudo reproducir el audio. Pulsa Reproducir para intentarlo de nuevo.');
           });
 
           return;
@@ -483,7 +498,7 @@ export function AudioPlayer() {
       wavesurferRef.current.play().catch((error) => {
         debug.error('Failed to play:', error);
         setIsPlaying(false);
-        setError(`Playback error: ${error instanceof Error ? error.message : String(error)}`);
+        setError('No se pudo reproducir el audio. Pulsa Reproducir para intentarlo de nuevo.');
       });
     }
   };
@@ -522,19 +537,24 @@ export function AudioPlayer() {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 z-50">
+    <div ref={panelRef} className="fixed bottom-0 left-0 right-0 border-t bg-background z-50" data-audio-player>
       <div className="container mx-auto px-4 py-3 max-w-7xl">
+        <div className="flex items-center gap-2 text-xs mb-2" role="status" aria-live="polite" data-playback-status>
+          <span className="font-medium text-accent">{error ? 'No se pudo reproducir' : isLoading || duration === 0 ? 'Cargando audio…' : isPlaying ? 'Reproduciendo' : currentTime >= duration - 0.05 ? 'Reproducción terminada · Puedes volver a escucharlo' : currentTime > 0 ? 'Pausado · Pulsa Reproducir para continuar' : 'Audio listo · Pulsa Reproducir'}</span>
+          {title && <span className="truncate text-muted-foreground">{title}</span>}
+        </div>
+        {playbackNotice && <p className="text-xs mb-2 text-muted-foreground">{playbackNotice}</p>}
         <div className="flex items-center gap-4">
           {/* Play/Pause Button */}
           <Button
             variant="ghost"
-            size="icon"
+            size="sm"
             onClick={handlePlayPause}
             disabled={isLoading || duration === 0}
             className={`shrink-0 -mt-2 ${isPlaying ? 'bg-accent text-accent-foreground' : ''}`}
-            title={duration === 0 && !isLoading ? 'Audio not loaded' : ''}
+            title={duration === 0 && !isLoading ? "Audio no cargado" : ''}
             aria-label={
-              duration === 0 && !isLoading ? 'Audio not loaded' : isPlaying ? 'Pause' : 'Play'
+              duration === 0 && !isLoading ? "Audio no cargado" : isPlaying ? "Pausar" : "Reproducir"
             }
           >
             {isPlaying ? (
@@ -542,18 +562,19 @@ export function AudioPlayer() {
             ) : (
               <Play className="h-5 w-5 fill-current" />
             )}
+            <span className="ml-2">{isLoading || duration === 0 ? 'Cargando…' : isPlaying ? 'Pausar' : currentTime >= duration - 0.05 ? 'Volver a escuchar' : 'Reproducir'}</span>
           </Button>
 
           {/* Waveform */}
           <div className="flex-1 min-w-0 flex flex-col gap-1">
-            <div ref={waveformRef} className="w-full min-h-[80px] select-none" />
+            <div ref={waveformRef} className="w-full min-h-[56px] select-none" />
             <Slider
               value={duration > 0 ? [(currentTime / duration) * 100] : [0]}
               onValueChange={handleSeek}
               max={100}
               step={0.1}
               className="w-full"
-              aria-label="Playback position"
+              aria-label="Posición de reproducción"
               aria-valuetext={`${formatAudioDuration(currentTime)} of ${formatAudioDuration(duration)}`}
             />
 
@@ -573,8 +594,8 @@ export function AudioPlayer() {
             size="icon"
             onClick={toggleLoop}
             className={isLooping ? 'bg-accent text-accent-foreground' : ''}
-            title="Toggle loop"
-            aria-label={isLooping ? 'Stop looping' : 'Loop'}
+            title="Activar o desactivar repetición"
+            aria-label={isLooping ? "Detener repetición" : "Repetir"}
           >
             <Repeat className="h-4 w-4" />
           </Button>
@@ -583,19 +604,19 @@ export function AudioPlayer() {
           <div
             className="flex items-center gap-2 shrink-0 w-[120px]"
             role="group"
-            aria-label="Volume"
+            aria-label="Volumen"
           >
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setVolume(volume > 0 ? 0 : 1)}
               className="h-8 w-8"
-              aria-label={volume > 0 ? 'Mute' : 'Unmute'}
+              aria-label={volume > 0 ? "Silenciar" : "Activar sonido"}
             >
               {volume > 0 ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
             </Button>
             <span id={volumeLabelId} className="sr-only">
-              Volume level, {Math.round(volume * 100)}%
+              Nivel de volumen,{Math.round(volume * 100)}%
             </span>
             <Slider
               value={[volume * 100]}
@@ -614,8 +635,8 @@ export function AudioPlayer() {
             size="icon"
             onClick={handleClose}
             className="shrink-0"
-            title="Close player"
-            aria-label="Close player"
+            title="Cerrar reproductor"
+            aria-label="Cerrar reproductor"
           >
             <X className="h-5 w-5" />
           </Button>

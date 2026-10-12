@@ -68,3 +68,13 @@ temp/
 backend/tests/results/
 backend/tests/fixtures/reference_voice.wav
 backend/tests/fixtures/reference_voice.txt
+
+# Local offline release artifacts
+frontend/
+release/
+payload/
+*.part[0-9][0-9][0-9]
+__pycache__/
+
+node_modules
+*.before-local-tuning

@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
+import { ProfileCard } from '@/components/VoiceProfiles/ProfileCard';
 import { SampleList } from '@/components/VoiceProfiles/SampleList';
 import { apiClient } from '@/lib/api/client';
 import type { EffectConfig } from '@/lib/api/types';
@@ -218,6 +219,7 @@ export function VoiceInspector({ profileId }: VoiceInspectorProps) {
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <div className={cn('flex-1 overflow-y-auto', isPlayerVisible && BOTTOM_SAFE_AREA_PADDING)}>
+        <div className="p-3"><ProfileCard profile={profile} compact /></div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-0">
             {/* Avatar */}

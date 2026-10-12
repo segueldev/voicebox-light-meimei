@@ -167,7 +167,7 @@ export function ProfileForm() {
     defaultValues: {
       name: '',
       description: '',
-      language: 'en',
+      language: 'es',
       personality: '',
       sampleFile: undefined,
       referenceText: '',
@@ -290,7 +290,7 @@ export function ProfileForm() {
     ? voiceSource === 'clone'
     : editingProfile?.voice_type !== 'preset';
   const availableDefaultEngines = DEFAULT_ENGINE_OPTIONS.filter(
-    (option) => !isSampleBasedProfile || !PRESET_ONLY_ENGINES.has(option.value),
+    (option) => (!isSampleBasedProfile || !PRESET_ONLY_ENGINES.has(option.value)) && (!import.meta.env.VITE_LOW_MEMORY || ['qwen', 'kokoro'].includes(option.value)),
   );
 
   // Show recording errors
@@ -372,7 +372,7 @@ export function ProfileForm() {
       form.reset({
         name: '',
         description: '',
-        language: 'en',
+        language: 'es',
         personality: '',
         sampleFile: undefined,
         referenceText: undefined,
@@ -694,7 +694,7 @@ export function ProfileForm() {
               });
             } catch (avatarError) {
               toast({
-                title: 'Avatar upload failed',
+                title: "No se pudo subir la imagen",
                 description:
                   avatarError instanceof Error ? avatarError.message : 'Failed to upload avatar',
                 variant: 'destructive',
@@ -764,7 +764,7 @@ export function ProfileForm() {
         const draft: ProfileFormDraft = {
           name: values.name || '',
           description: values.description || '',
-          language: values.language || 'en',
+          language: values.language || 'es',
           personality: values.personality || '',
           referenceText: values.referenceText || '',
           sampleMode,
@@ -827,7 +827,7 @@ export function ProfileForm() {
                     form.reset({
                       name: '',
                       description: '',
-                      language: 'en',
+                      language: 'es',
                       personality: '',
                       sampleFile: undefined,
                       referenceText: '',
@@ -897,7 +897,7 @@ export function ProfileForm() {
                               </FormControl>
                               <SelectContent>
                                 <SelectItem value="kokoro">Kokoro 82M</SelectItem>
-                                <SelectItem value="qwen_custom_voice">Qwen CustomVoice</SelectItem>
+                                {!import.meta.env.VITE_LOW_MEMORY && (<SelectItem value="qwen_custom_voice">Qwen CustomVoice</SelectItem>)}
                               </SelectContent>
                             </Select>
                           </FormItem>
@@ -926,7 +926,7 @@ export function ProfileForm() {
                                   <div className="font-medium">{voice.name}</div>
                                   <div className="flex gap-1.5 mt-0.5">
                                     <Badge variant="outline" className="text-[10px] h-4 px-1">
-                                      {voice.gender}
+                                      {voice.gender === 'male' ? 'Hombre' : voice.gender === 'female' ? 'Mujer' : voice.gender}
                                     </Badge>
                                     <Badge variant="outline" className="text-[10px] h-4 px-1">
                                       {voice.language}
@@ -1088,7 +1088,7 @@ export function ProfileForm() {
                             return voice ? (
                               <div className="flex gap-1.5">
                                 <Badge variant="outline" className="text-xs">
-                                  {voice.gender}
+                                  {voice.gender === 'male' ? 'Hombre' : voice.gender === 'female' ? 'Mujer' : voice.gender}
                                 </Badge>
                                 <Badge variant="outline" className="text-xs">
                                   {voice.language}
@@ -1194,7 +1194,7 @@ export function ProfileForm() {
                     )}
                   />
 
-                  <FormField
+                  {!import.meta.env.VITE_LOW_MEMORY && (<FormField
                     control={form.control}
                     name="personality"
                     render={({ field }) => (
@@ -1213,7 +1213,7 @@ export function ProfileForm() {
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
+                  />)}
 
                   <FormField
                     control={form.control}

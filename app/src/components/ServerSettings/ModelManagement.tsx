@@ -421,9 +421,9 @@ export function ModelManagement() {
 
   // Build sections
   const sections: { label: string; models: ModelStatus[] }[] = [
-    { label: t('models.sections.voiceGeneration'), models: voiceModels },
-    { label: t('models.sections.transcription'), models: whisperModels },
-    { label: t('models.sections.languageModels'), models: llmModels },
+    { label: t('models.sections.voiceGeneration'), models: voiceModels.filter((m) => !import.meta.env.VITE_LOW_MEMORY || ['qwen-tts-0.6B', 'kokoro'].includes(m.model_name)) },
+    { label: t('models.sections.transcription'), models: whisperModels.filter((m) => !import.meta.env.VITE_LOW_MEMORY || ['whisper-base','whisper-small'].includes(m.model_name)) },
+    { label: t('models.sections.languageModels'), models: import.meta.env.VITE_LOW_MEMORY ? [] : llmModels },
   ];
 
   // Get detail modal state for selected model
@@ -531,7 +531,7 @@ export function ModelManagement() {
         </div>
       ) : modelStatus ? (
         <div className="flex-1 min-h-0 overflow-y-auto space-y-6 pb-6">
-          {sections.map((section) => (
+          {sections.filter((section) => section.models.length > 0).map((section) => (
             <div key={section.label}>
               <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1 px-1">
                 {section.label}

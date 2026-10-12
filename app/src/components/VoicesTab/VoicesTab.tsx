@@ -76,13 +76,14 @@ export function VoicesTab() {
       }
       return assignments;
     },
-    enabled: !!profiles,
+    enabled: !!profiles && !import.meta.env.VITE_LOCAL_DESKTOP,
   });
 
   // Get all channels
   const { data: channels } = useQuery({
     queryKey: ['channels'],
     queryFn: () => apiClient.listChannels(),
+    enabled: !import.meta.env.VITE_LOCAL_DESKTOP,
   });
 
   const handleChannelChange = async (profileId: string, channelIds: string[]) => {
@@ -146,7 +147,7 @@ export function VoicesTab() {
                 <TableHead className="w-[10%]">{t('voicesTab.columns.generations')}</TableHead>
                 <TableHead className="w-[8%]">{t('voicesTab.columns.samples')}</TableHead>
                 <TableHead className="w-[8%]">{t('voicesTab.columns.effects')}</TableHead>
-                <TableHead className="w-[24%]">{t('voicesTab.columns.channels')}</TableHead>
+                {!import.meta.env.VITE_LOCAL_DESKTOP && (<TableHead className="w-[24%]">{t('voicesTab.columns.channels')}</TableHead>)}
                 <TableHead className="w-6"></TableHead>
               </TableRow>
             </TableHeader>
@@ -247,7 +248,7 @@ function VoiceRow({
           <span className="text-xs text-muted-foreground">—</span>
         )}
       </TableCell>
-      <TableCell onClick={(e) => e.stopPropagation()}>
+      {!import.meta.env.VITE_LOCAL_DESKTOP && (<TableCell onClick={(e) => e.stopPropagation()}>
         <MultiSelect
           options={channels.map((ch) => ({
             value: ch.id,
@@ -258,7 +259,7 @@ function VoiceRow({
           placeholder={t('voicesTab.selectChannels')}
           className="w-full"
         />
-      </TableCell>
+      </TableCell>)}
       <TableCell />
     </TableRow>
   );

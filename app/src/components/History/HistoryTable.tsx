@@ -44,7 +44,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { apiClient } from '@/lib/api/client';
 import type { EffectConfig, GenerationVersionResponse, HistoryResponse } from '@/lib/api/types';
-import { BOTTOM_SAFE_AREA_PADDING } from '@/lib/constants/ui';
 import {
   useClearFailedGenerations,
   useDeleteGeneration,
@@ -106,13 +105,13 @@ export function HistoryTable() {
     onSuccess: async (data) => {
       await queryClient.invalidateQueries({ queryKey: ['history'] });
       toast({
-        title: 'Cancelling generation',
+        title: "Cancelando generación",
         description: data.message,
       });
     },
     onError: (error) => {
       toast({
-        title: 'Cancel failed',
+        title: "No se pudo cancelar",
         description: error instanceof Error ? error.message : 'Could not cancel generation',
         variant: 'destructive',
       });
@@ -123,8 +122,6 @@ export function HistoryTable() {
   const restartCurrentAudio = usePlayerStore((state) => state.restartCurrentAudio);
   const currentAudioId = usePlayerStore((state) => state.audioId);
   const isPlaying = usePlayerStore((state) => state.isPlaying);
-  const audioUrl = usePlayerStore((state) => state.audioUrl);
-  const isPlayerVisible = !!audioUrl;
 
   // Update accumulated history when new data arrives
   useEffect(() => {
@@ -220,7 +217,7 @@ export function HistoryTable() {
       {
         onError: (error) => {
           toast({
-            title: 'Failed to download audio',
+            title: "No se pudo descargar el audio",
             description: error.message,
             variant: 'destructive',
           });
@@ -235,7 +232,7 @@ export function HistoryTable() {
       {
         onError: (error) => {
           toast({
-            title: 'Failed to export generation',
+            title: "No se pudo exportar la generación",
             description: error.message,
             variant: 'destructive',
           });
@@ -264,7 +261,7 @@ export function HistoryTable() {
       queryClient.invalidateQueries({ queryKey: ['history'] });
     } catch (error) {
       toast({
-        title: 'Retry failed',
+        title: "No se pudo reintentar",
         description: error instanceof Error ? error.message : 'Could not retry generation',
         variant: 'destructive',
       });
@@ -278,7 +275,7 @@ export function HistoryTable() {
       queryClient.invalidateQueries({ queryKey: ['history'] });
     } catch (error) {
       toast({
-        title: 'Regenerate failed',
+        title: "No se pudo volver a generar",
         description: error instanceof Error ? error.message : 'Could not regenerate',
         variant: 'destructive',
       });
@@ -291,7 +288,7 @@ export function HistoryTable() {
       queryClient.invalidateQueries({ queryKey: ['history'] });
     } catch (error) {
       toast({
-        title: 'Failed to update favorite',
+        title: "No se pudo actualizar el favorito",
         description: error instanceof Error ? error.message : 'Unknown error',
         variant: 'destructive',
       });
@@ -336,10 +333,10 @@ export function HistoryTable() {
       }
 
       setEffectsDialogOpen(false);
-      toast({ title: 'Effects applied', description: 'A new version has been created.' });
+      toast({ title: "Efectos aplicados", description: "Se creó una versión nueva." });
     } catch (error) {
       toast({
-        title: 'Failed to apply effects',
+        title: "No se pudieron aplicar los efectos",
         description: error instanceof Error ? error.message : 'Unknown error',
         variant: 'destructive',
       });
@@ -354,7 +351,7 @@ export function HistoryTable() {
       queryClient.invalidateQueries({ queryKey: ['history'] });
     } catch (error) {
       toast({
-        title: 'Failed to switch version',
+        title: "No se pudo cambiar de versión",
         description: error instanceof Error ? error.message : 'Unknown error',
         variant: 'destructive',
       });
@@ -381,13 +378,13 @@ export function HistoryTable() {
             fileInputRef.current.value = '';
           }
           toast({
-            title: 'Generation imported',
+            title: "Generación importada",
             description: data.message || 'Generation imported successfully',
           });
         },
         onError: (error) => {
           toast({
-            title: 'Failed to import generation',
+            title: "No se pudo importar la generación",
             description: error.message,
             variant: 'destructive',
           });
@@ -413,14 +410,14 @@ export function HistoryTable() {
       onSuccess: (data) => {
         setClearFailedDialogOpen(false);
         toast({
-          title: 'Cleared failed generations',
+          title: "Generaciones fallidas eliminadas",
           description: `${data.deleted} failed ${data.deleted === 1 ? 'generation' : 'generations'} removed.`,
         });
       },
       onError: (error) => {
         setClearFailedDialogOpen(false);
         toast({
-          title: 'Failed to clear',
+          title: "No se pudo eliminar",
           description: error instanceof Error ? error.message : 'Unknown error',
           variant: 'destructive',
         });
@@ -439,7 +436,7 @@ export function HistoryTable() {
           {failedCount > 0 && (
             <div className="flex items-center justify-between px-1 pb-2">
               <span className="text-xs text-muted-foreground">
-                {failedCount} failed {failedCount === 1 ? 'generation' : 'generations'}
+                {failedCount} {failedCount === 1 ? 'generación fallida' : 'generaciones fallidas'}
               </span>
               <Button
                 variant="ghost"
@@ -449,7 +446,7 @@ export function HistoryTable() {
                 disabled={clearFailed.isPending}
               >
                 <Trash2 className="h-3 w-3 mr-1.5" />
-                {clearFailed.isPending ? 'Clearing...' : 'Clear failed'}
+                {clearFailed.isPending ? "Eliminando…" : "Eliminar fallidas"}
               </Button>
             </div>
           )}
@@ -458,9 +455,11 @@ export function HistoryTable() {
           )}
           <div
             ref={scrollRef}
+            data-history-scroll
+            style={{ paddingBottom: 16 }}
             className={cn(
               'flex-1 min-h-0 overflow-y-auto space-y-2 pb-4',
-              isPlayerVisible && BOTTOM_SAFE_AREA_PADDING,
+
             )}
           >
             {history.map((gen) => {
@@ -535,7 +534,7 @@ export function HistoryTable() {
                           {formatEngineName(gen.engine, gen.model_size)}
                         </span>
                         {isFailed ? (
-                          <span className="text-xs text-destructive">Failed</span>
+                          <span className="text-xs text-destructive">Falló</span>
                         ) : !isGenerating ? (
                           <span className="text-xs text-muted-foreground">
                             {formatDuration(gen.duration ?? 0)}
@@ -545,10 +544,12 @@ export function HistoryTable() {
                       <div className="text-xs text-muted-foreground">
                         {isInProgress ? (
                           <span className="text-accent">
-                            {gen.status === 'loading_model' ? 'Loading model...' : 'Generating...'}
+                            {gen.status === 'loading_model' ? "Cargando modelo…" : "Generando…"}
                           </span>
+                        ) : isFailed ? (
+                          'No se pudo generar'
                         ) : (
-                          formatDate(gen.created_at)
+                          <span className={isCurrentlyPlaying ? 'text-accent' : ''}>{isCurrentlyPlaying ? 'Reproduciendo' : 'Listo · Pulsa para escuchar'} · {formatDate(gen.created_at)}</span>
                         )}
                       </div>
                     </div>
@@ -576,7 +577,7 @@ export function HistoryTable() {
                           'h-6 w-6 text-muted-foreground/50 hover:bg-muted-foreground/20 hover:text-muted-foreground',
                           gen.is_favorited && 'text-accent hover:text-accent',
                         )}
-                        aria-label={gen.is_favorited ? 'Unfavorite' : 'Favorite'}
+                        aria-label={gen.is_favorited ? "Quitar de favoritos" : "Favorito"}
                         onClick={() => handleToggleFavorite(gen.id)}
                       >
                         <Star
@@ -592,7 +593,7 @@ export function HistoryTable() {
                             'h-6 w-6 text-muted-foreground/50 hover:bg-muted-foreground/20 hover:text-muted-foreground',
                             isVersionsExpanded && 'text-accent hover:text-accent',
                           )}
-                          aria-label="Toggle versions"
+                          aria-label="Mostrar u ocultar versiones"
                           onClick={() => setExpandedVersionsId(isVersionsExpanded ? null : gen.id)}
                         >
                           <AudioLines className="h-2 w-2" />
@@ -605,7 +606,7 @@ export function HistoryTable() {
                             variant="ghost"
                             size="icon"
                             className="h-6 w-6 text-muted-foreground/50 hover:bg-muted-foreground/20 hover:text-muted-foreground"
-                            aria-label="Retry generation"
+                            aria-label="Reintentar generación"
                             onClick={() => handleRetry(gen.id)}
                           >
                             <RotateCcw className="h-2 w-2" />
@@ -614,7 +615,7 @@ export function HistoryTable() {
                             variant="ghost"
                             size="icon"
                             className="h-6 w-6 text-muted-foreground/50 hover:bg-muted-foreground/20 hover:text-muted-foreground"
-                            aria-label="Delete generation"
+                            aria-label="Eliminar generación"
                             disabled={deleteGeneration.isPending}
                             onClick={() => handleDeleteClick(gen.id, gen.profile_name)}
                           >
@@ -626,7 +627,7 @@ export function HistoryTable() {
                           variant="ghost"
                           size="icon"
                           className="h-6 w-6 text-muted-foreground/50 hover:bg-muted-foreground/20 hover:text-muted-foreground"
-                          aria-label="Cancel generation"
+                          aria-label="Cancelar generación"
                           disabled={isCancelling}
                           onClick={() => cancelGeneration.mutate(gen.id)}
                         >
@@ -765,8 +766,7 @@ export function HistoryTable() {
             {/* End of list indicator */}
             {!hasMore && history.length > 0 && (
               <div className="text-center py-4 text-xs text-muted-foreground">
-                You've reached the end
-              </div>
+                Llegaste al final</div>
             )}
           </div>
         </>

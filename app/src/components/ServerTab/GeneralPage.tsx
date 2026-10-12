@@ -110,7 +110,7 @@ export function GeneralPage() {
       </div>
 
       <SettingSection>
-        <SettingRow
+        {!import.meta.env.VITE_LOCAL_DESKTOP && (<SettingRow
           title={t('settings.general.serverUrl.title')}
           description={t('settings.general.serverUrl.description')}
           action={
@@ -138,9 +138,9 @@ export function GeneralPage() {
               )}
             </form>
           </Form>
-        </SettingRow>
+        </SettingRow>)}
 
-        <SettingRow
+        {platform.metadata.isTauri && (<SettingRow
           title={t('settings.general.keepServerRunning.title')}
           description={t('settings.general.keepServerRunning.description')}
           htmlFor="keepServerRunning"
@@ -169,7 +169,7 @@ export function GeneralPage() {
               }}
             />
           }
-        />
+        />)}
 
         {platform.metadata.isTauri && (
           <SettingRow

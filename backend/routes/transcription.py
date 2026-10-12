@@ -45,6 +45,10 @@ async def transcribe_audio(
                 detail=f"Invalid model size '{model_size}'. Must be one of: {', '.join(valid_sizes)}",
             )
 
+        import os
+        if os.environ.get("VOICEBOX_LOW_MEMORY") == "1" and model_size not in {"base", "small"}:
+            raise HTTPException(status_code=400, detail="En este equipo usa Whisper Small para mayor precisión o Base para mayor rapidez.")
+
         already_loaded = whisper_model.is_loaded() and whisper_model.model_size == model_size
         if not already_loaded and not whisper_model._is_model_cached(model_size):
             progress_model_name = f"whisper-{model_size}"

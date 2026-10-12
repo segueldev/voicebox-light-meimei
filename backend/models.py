@@ -2,7 +2,7 @@
 Pydantic models for request/response validation.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import datetime
 
@@ -81,9 +81,17 @@ class GenerationRequest(BaseModel):
 
     profile_id: str
     text: str = Field(..., min_length=1, max_length=50000)
+
+    @field_validator("text")
+    @classmethod
+    def validate_spoken_text(cls, value):
+        if not any(char.isalpha() or char.isdigit() for char in value):
+            raise ValueError("Escribe un texto con palabras o números para generar voz.")
+        return value.strip()
+
     language: str = Field(default="en", pattern="^(zh|en|ja|ko|de|fr|ru|pt|es|it|he|ar|da|el|fi|hi|ms|nl|no|pl|sv|sw|tr)$")
     seed: Optional[int] = Field(None, ge=0)
-    model_size: Optional[str] = Field(default="1.7B", pattern="^(1\\.7B|0\\.6B|1B|3B)$")
+    model_size: Optional[str] = Field(default="0.6B", pattern="^(1\\.7B|0\\.6B|1B|3B)$")
     instruct: Optional[str] = Field(None, max_length=500)
     engine: Optional[str] = Field(default="qwen", pattern="^(qwen|qwen_custom_voice|luxtts|chatterbox|chatterbox_turbo|tada|kokoro)$")
     personality: bool = Field(
@@ -91,7 +99,7 @@ class GenerationRequest(BaseModel):
         description="When true and the profile has a personality prompt, the input text is rewritten in-character before TTS.",
     )
     max_chunk_chars: int = Field(
-        default=800, ge=100, le=5000, description="Max characters per chunk for long text splitting"
+        default=200, ge=100, le=5000, description="Max characters per chunk for long text splitting"
     )
     crossfade_ms: int = Field(
         default=50, ge=0, le=500, description="Crossfade duration in ms between chunks (0 for hard cut)"
@@ -289,7 +297,7 @@ class CaptureSettingsUpdate(BaseModel):
 class GenerationSettingsResponse(BaseModel):
     """Server-persisted defaults for the generation flow."""
 
-    max_chunk_chars: int = Field(default=800, ge=100, le=5000)
+    max_chunk_chars: int = Field(default=200, ge=100, le=5000)
     crossfade_ms: int = Field(default=50, ge=0, le=500)
     normalize_audio: bool = True
     autoplay_on_generate: bool = True

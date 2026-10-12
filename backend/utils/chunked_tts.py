@@ -19,7 +19,7 @@ logger = logging.getLogger("voicebox.chunked-tts")
 
 # Default chunk size in characters.  Can be overridden per-request via
 # the ``max_chunk_chars`` field on GenerationRequest.
-DEFAULT_MAX_CHUNK_CHARS = 800
+DEFAULT_MAX_CHUNK_CHARS = 200
 
 # Common abbreviations that should NOT be treated as sentence endings.
 # Lowercase for case-insensitive matching.
@@ -244,6 +244,10 @@ async def generate_chunked(
     -------
     (audio, sample_rate) : Tuple[np.ndarray, int]
     """
+    import os
+    if os.environ.get("VOICEBOX_SPANISH_TEXT") == "1":
+        from .spanish_text import prepare_spanish_text
+        text = prepare_spanish_text(text, language)
     chunks = split_text_into_chunks(text, max_chunk_chars)
 
     if len(chunks) <= 1:

@@ -1,0 +1,14 @@
+#!/bin/bash
+set -euo pipefail
+APP_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+[[ -f "$APP_ROOT/linux-light/VERSION" && -d "$APP_ROOT/runtime" ]] || exit 1
+if command -v zenity >/dev/null; then
+    zenity --question --title='Desinstalar Light Meimei' --text='¿Eliminar la aplicación? Tus voces, grabaciones e historial se conservarán.' || exit 0
+else
+    read -r -p '¿Eliminar la aplicación y conservar los datos? (s/N): ' REPLY
+    [[ $REPLY == [sS] ]] || exit 0
+fi
+gapplication action io.github.segueldev.voiceboxlightmeimei quit 2>/dev/null || true
+rm -f "${XDG_DATA_HOME:-$HOME/.local/share}/applications/voicebox-light-meimei.desktop" "${XDG_DATA_HOME:-$HOME/.local/share}/icons/hicolor/scalable/apps/voicebox-light-meimei.svg"
+rm -rf -- "$APP_ROOT"
+kbuildsycoca6 --noincremental >/dev/null 2>&1 || true

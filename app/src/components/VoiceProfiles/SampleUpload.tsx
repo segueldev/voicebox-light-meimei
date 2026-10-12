@@ -86,8 +86,8 @@ export function SampleUpload({ profileId, open, onOpenChange }: SampleUploadProp
       }
       form.setValue('file', file, { shouldValidate: true });
       toast({
-        title: 'Recording complete',
-        description: 'Audio has been recorded successfully.',
+        title: "Grabación terminada",
+        description: "El audio se grabó correctamente.",
       });
     },
   });
@@ -113,8 +113,8 @@ export function SampleUpload({ profileId, open, onOpenChange }: SampleUploadProp
       }
       form.setValue('file', file, { shouldValidate: true });
       toast({
-        title: 'System audio captured',
-        description: 'Audio has been captured successfully.',
+        title: "Audio del sistema grabado",
+        description: "El audio se capturó correctamente.",
       });
     },
   });
@@ -123,7 +123,7 @@ export function SampleUpload({ profileId, open, onOpenChange }: SampleUploadProp
   useEffect(() => {
     if (recordingError) {
       toast({
-        title: 'Recording error',
+        title: "Error de grabación",
         description: recordingError,
         variant: 'destructive',
       });
@@ -134,7 +134,7 @@ export function SampleUpload({ profileId, open, onOpenChange }: SampleUploadProp
   useEffect(() => {
     if (systemRecordingError) {
       toast({
-        title: 'System audio capture error',
+        title: "Error al grabar el audio del sistema",
         description: systemRecordingError,
         variant: 'destructive',
       });
@@ -145,8 +145,8 @@ export function SampleUpload({ profileId, open, onOpenChange }: SampleUploadProp
     const file = form.getValues('file');
     if (!file) {
       toast({
-        title: 'No file selected',
-        description: 'Please select an audio file first.',
+        title: "No hay un archivo seleccionado",
+        description: "Selecciona primero un archivo de audio.",
         variant: 'destructive',
       });
       return;
@@ -159,7 +159,7 @@ export function SampleUpload({ profileId, open, onOpenChange }: SampleUploadProp
       form.setValue('referenceText', result.text, { shouldValidate: true });
     } catch (error) {
       toast({
-        title: 'Transcription failed',
+        title: "No se pudo transcribir",
         description: error instanceof Error ? error.message : 'Failed to transcribe audio',
         variant: 'destructive',
       });
@@ -175,8 +175,8 @@ export function SampleUpload({ profileId, open, onOpenChange }: SampleUploadProp
       });
 
       toast({
-        title: 'Sample added',
-        description: 'Audio sample has been added successfully.',
+        title: "Muestra añadida",
+        description: "La muestra de audio se añadió correctamente.",
       });
 
       handleOpenChange(false);
@@ -223,10 +223,9 @@ export function SampleUpload({ profileId, open, onOpenChange }: SampleUploadProp
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Audio Sample</DialogTitle>
+          <DialogTitle>Añadir muestra de audio</DialogTitle>
           <DialogDescription>
-            Upload an audio file and provide the reference text that matches the audio.
-          </DialogDescription>
+            Sube un archivo de audio y añade el texto que se dice en él.</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -237,17 +236,14 @@ export function SampleUpload({ profileId, open, onOpenChange }: SampleUploadProp
               >
                 <TabsTrigger value="upload" className="flex items-center gap-2">
                   <Upload className="h-4 w-4 shrink-0" />
-                  Upload
-                </TabsTrigger>
+                  Subir archivo</TabsTrigger>
                 <TabsTrigger value="record" className="flex items-center gap-2">
                   <Mic className="h-4 w-4 shrink-0" />
-                  Record
-                </TabsTrigger>
+                  Grabar</TabsTrigger>
                 {platform.metadata.isTauri && isSystemAudioSupported && (
                   <TabsTrigger value="system" className="flex items-center gap-2">
                     <Monitor className="h-4 w-4 shrink-0" />
-                    System Audio
-                  </TabsTrigger>
+                    Audio del sistema</TabsTrigger>
                 )}
               </TabsList>
 
@@ -319,10 +315,10 @@ export function SampleUpload({ profileId, open, onOpenChange }: SampleUploadProp
               name="referenceText"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Reference Text</FormLabel>
+                  <FormLabel>Texto de referencia</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Enter the exact text spoken in the audio..."
+                      placeholder="Escribe exactamente lo que se dice en el audio…"
                       className="min-h-[100px]"
                       {...field}
                     />
@@ -334,10 +330,9 @@ export function SampleUpload({ profileId, open, onOpenChange }: SampleUploadProp
 
             <div className="flex gap-2 justify-end">
               <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
-                Cancel
-              </Button>
+                Cancelar</Button>
               <Button type="submit" disabled={addSample.isPending}>
-                {addSample.isPending ? 'Uploading...' : 'Add Sample'}
+                {addSample.isPending ? "Subiendo…" : "Añadir muestra"}
               </Button>
             </div>
           </form>

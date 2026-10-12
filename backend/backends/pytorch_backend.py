@@ -21,15 +21,17 @@ from .base import (
 )
 from ..utils.cache import get_cache_key, get_cached_voice_prompt, cache_voice_prompt
 from ..utils.audio import load_audio
+from ..utils.runtime_memory import serialized_model_work, release_other_tts_engines
 
 
 class PyTorchTTSBackend:
     """PyTorch-based TTS backend using Qwen3-TTS."""
 
-    def __init__(self, model_size: str = "1.7B"):
+    def __init__(self, model_size: str = "0.6B"):
         self.model = None
         self.model_size = model_size
         self.device = self._get_device()
+        self._load_lock = asyncio.Lock()
         self._current_model_size = None
 
     def _get_device(self) -> str:
@@ -64,6 +66,10 @@ class PyTorchTTSBackend:
         return is_model_cached(self._get_model_path(model_size))
 
     async def load_model_async(self, model_size: Optional[str] = None):
+        async with self._load_lock:
+            await self._load_model_locked(model_size)
+
+    async def _load_model_locked(self, model_size: Optional[str] = None):
         """
         Lazy load the TTS model with automatic downloading from HuggingFace Hub.
 
@@ -118,6 +124,7 @@ class PyTorchTTSBackend:
                     cache_dir=tts_cache_dir,
                     device_map=self.device,
                     torch_dtype=torch.bfloat16,
+                    attn_implementation="sdpa",
                 )
 
         self._current_model_size = model_size
@@ -248,11 +255,12 @@ class PyTorchTTSBackend:
 class PyTorchSTTBackend:
     """PyTorch-based STT backend using Whisper."""
 
-    def __init__(self, model_size: str = "base"):
+    def __init__(self, model_size: str = "small"):
         self.model = None
         self.processor = None
         self.model_size = model_size
         self.device = self._get_device()
+        self._load_lock = asyncio.Lock()
 
     def _get_device(self) -> str:
         """Get the best available device."""
@@ -267,6 +275,10 @@ class PyTorchSTTBackend:
         return is_model_cached(hf_repo)
 
     async def load_model_async(self, model_size: Optional[str] = None):
+        async with self._load_lock:
+            await self._load_model_locked(model_size)
+
+    async def _load_model_locked(self, model_size: Optional[str] = None):
         """
         Lazy load the Whisper model.
 
@@ -296,7 +308,10 @@ class PyTorchSTTBackend:
             logger.info("Loading Whisper model %s on %s...", model_size, self.device)
 
             self.processor = WhisperProcessor.from_pretrained(model_name)
-            self.model = WhisperForConditionalGeneration.from_pretrained(model_name)
+            kwargs = {"low_cpu_mem_usage": True}
+            if self.device == "cuda":
+                kwargs.update(device_map="cuda", torch_dtype=torch.float16, attn_implementation="sdpa")
+            self.model = WhisperForConditionalGeneration.from_pretrained(model_name, **kwargs)
 
         self.model.to(self.device)
         self.model_size = model_size
@@ -314,6 +329,7 @@ class PyTorchSTTBackend:
 
             logger.info("Whisper model unloaded")
 
+    @serialized_model_work
     async def transcribe(
         self,
         audio_path: str,
@@ -331,6 +347,7 @@ class PyTorchSTTBackend:
         Returns:
             Transcribed text
         """
+        release_other_tts_engines("whisper")
         await self.load_model_async(model_size)
 
         def _transcribe_sync():
@@ -347,22 +364,21 @@ class PyTorchSTTBackend:
                 audio,
                 sampling_rate=16000,
                 return_tensors="pt",
+                return_attention_mask=True,
             )
             inputs = inputs.to(self.device)
+            inputs["input_features"] = inputs["input_features"].to(dtype=self.model.dtype)
 
             # Generate transcription
             # If language is provided, force it; otherwise let Whisper auto-detect
-            generate_kwargs = {}
+            generate_kwargs = {"task": "transcribe"}
             if language:
-                forced_decoder_ids = self.processor.get_decoder_prompt_ids(
-                    language=language,
-                    task="transcribe",
-                )
-                generate_kwargs["forced_decoder_ids"] = forced_decoder_ids
+                generate_kwargs["language"] = language
 
-            with torch.no_grad():
+            with torch.inference_mode():
                 predicted_ids = self.model.generate(
                     inputs["input_features"],
+                    attention_mask=inputs.get("attention_mask"),
                     **generate_kwargs,
                 )
 

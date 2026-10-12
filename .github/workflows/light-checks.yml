@@ -1,0 +1,19 @@
+name: Light Meimei checks
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install num2words
+      - run: python backend/tests/test_light_spanish_text.py
+      - run: python backend/tests/test_light_runtime_memory.py
+      - run: python -m compileall -q backend linux-light
+      - run: bash -n linux-light/installer.sh linux-light/launch linux-light/uninstall

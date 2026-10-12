@@ -176,3 +176,9 @@
   animation-play-state: paused !important;
   background-color: hsl(var(--muted-foreground)) !important;
 }
+
+/* Less compositing and shorter decorative transitions for this 8 GB setup. */
+html[data-low-memory] [class*="backdrop-blur"] { backdrop-filter: none !important; }
+html[data-low-memory] .transition-all,
+html[data-low-memory] .transition-colors,
+html[data-low-memory] .transition-opacity { transition-duration: 80ms !important; }

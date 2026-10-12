@@ -11,7 +11,7 @@ import { ProfileForm } from './ProfileForm';
 /** Engines that use preset (built-in) voices instead of cloned profiles. */
 const PRESET_ENGINES = new Set(['kokoro', 'qwen_custom_voice']);
 
-export function ProfileList() {
+export function ProfileList({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation();
   const { data: profiles, isLoading, error } = useProfiles();
   const setDialogOpen = useUIStore((state) => state.setProfileDialogOpen);
@@ -70,6 +70,16 @@ export function ProfileList() {
 
   const hasUnsupported = sortedProfiles.some((p) => !isSupported(p));
 
+  if (compact) return (
+    <div className="flex items-center gap-2 overflow-x-auto py-1" data-profile-selector>
+      {sortedProfiles.map((profile) => (
+        <ProfileCard key={profile.id} profile={profile} compact />
+      ))}
+      {sortedProfiles.length === 0 && <Button type="button" onClick={() => setDialogOpen(true)}>Crear voz</Button>}
+      <ProfileForm />
+    </div>
+  );
+
   return (
     <div className="flex flex-col">
       <div className="shrink-0">
@@ -85,20 +95,20 @@ export function ProfileList() {
             </CardContent>
           </Card>
         ) : (
-          <div className="flex gap-4 overflow-x-auto p-1 pb-1 lg:grid lg:grid-cols-3 lg:auto-rows-auto lg:overflow-x-visible lg:pb-[150px]">
+          <div className="flex gap-4 overflow-x-auto overscroll-x-contain p-1 pb-1">
             {sortedProfiles.map((profile) => (
               <div
                 key={profile.id}
-                className="shrink-0 w-[200px] lg:w-auto lg:shrink"
+                className="shrink-0 w-[220px]"
                 ref={(el) => {
                   if (el) cardRefs.current.set(profile.id, el);
                   else cardRefs.current.delete(profile.id);
                 }}
               >
-                <ProfileCard profile={profile} disabled={!isSupported(profile)} />
+                <ProfileCard profile={profile} disabled={!isSupported(profile) && !import.meta.env.VITE_LOW_MEMORY} />
               </div>
             ))}
-            {hasUnsupported && (
+            {hasUnsupported && !import.meta.env.VITE_LOW_MEMORY && (
               <div className="col-span-full flex items-center gap-2 text-xs text-muted-foreground py-2">
                 <Info className="h-3.5 w-3.5 shrink-0" />
                 <span>{t('profiles.list.unsupportedNote')}</span>
