@@ -6,6 +6,32 @@
 
 Aplicación de escritorio en español para generar y clonar voces de forma local. El lanzador abre una ventana propia y gestiona automáticamente el servicio interno; no hay que abrir el navegador, escribir localhost ni mantener una terminal. No es una versión oficial del proyecto original.
 
+## Así se ve la aplicación Linux
+
+Capturas reales de Light Meimei en KDE Plasma X11, con voces y audios de demostración. La ventana pertenece a la aplicación: se abre desde el menú y prepara el servicio automáticamente.
+
+![Ventana de Voice Box Edición Light Meimei en Linux, con perfiles, audios y caja de escritura en español](docs/images/app-linux.png)
+
+**Una aplicación lista para abrir.** Ventana propia, logo Meimei, interfaz en español y acceso directo a generación y clonación local. [Descargar la edición Linux offline](https://github.com/segueldev/voicebox-light-meimei/releases/tag/v0.5.0-light-meimei.1).
+
+### Historial, escritura y reproducción con su propio espacio
+
+![Historial de audios, caja de escritura y reproductor separados en la ventana Linux](docs/images/historial-reproductor.png)
+
+Los controles de reproducción quedan debajo de la escritura y el historial conserva una zona para desplazarse. El estado y la onda del audio permiten ver qué se está reproduciendo; las acciones de los perfiles están alineadas.
+
+### Inicio automático con logo y progreso
+
+![Bienvenida de Meimei con logo y barra de progreso durante el inicio del servicio de voz](docs/images/inicio-meimei.png)
+
+La bienvenida muestra las etapas de arranque con una barra animada y desaparece cuando la interfaz está lista. El usuario no tiene que gestionar localhost ni dejar una terminal abierta.
+
+### Modelos seleccionados para equipos modestos
+
+![Modelos locales disponibles en el perfil ligero de Meimei](docs/images/modelos-ligeros.png)
+
+Kokoro 82M, Qwen3-TTS 0.6B y Whisper Base/Small: un conjunto local limitado a los modelos del perfil ligero. La voz masculina Alex permite empezar en español; la clonación utiliza una referencia de voz propia. Estas funciones de voz proceden de Voicebox; su selección, configuración y presentación forman parte de esta adaptación.
+
 ## ¿Por qué elegir Light Meimei?
 
 **Porque en Linux se abre como una aplicación desde el menú y prepara todo automáticamente.** No tienes que iniciar el servicio a mano, dejar una terminal abierta, abrir un navegador ni escribir una dirección localhost cada vez. Al cerrar la ventana también se cierra el servicio que inició la aplicación.
