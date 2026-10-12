@@ -5,7 +5,7 @@
 Base: Voicebox v0.5.0. Estos cambios se prepararon para un equipo de 8 GB de RAM y RTX 2050 de 4 GB.
 
 ### Aplicación Linux y uso sin conexión
-- Ventana de aplicación con GTK/WebKit, servicio interno automático, inicio único y cierre del proceso al salir.
+- Ventana de aplicación Linux con GTK/WebKit, servicio interno automático, inicio único y cierre del proceso al salir. No hace falta iniciar localhost manualmente ni abrir el navegador. Esta integración parte de la instalación manual Linux de v0.5.0; las funciones de síntesis y clonación ya existían en Voicebox.
 - Lanzador con icono integrado en el menú KDE; corrección de la ruta del lanzador y actualización de la caché del menú en español.
 - Nombre Voice Box Edición Light Meimei, logo Meimei y créditos de segueldev junto a los de Jamie Pine.
 - Inicio con logo, aparición suave y barra animada que avanza por etapas reales hasta abrir la interfaz.

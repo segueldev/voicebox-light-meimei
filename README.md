@@ -6,6 +6,32 @@
 
 Aplicación de escritorio en español para generar y clonar voces de forma local. El lanzador abre una ventana propia y gestiona automáticamente el servicio interno; no hay que abrir el navegador, escribir localhost ni mantener una terminal. No es una versión oficial del proyecto original.
 
+## ¿Por qué elegir Light Meimei?
+
+**Porque en Linux se abre como una aplicación desde el menú y prepara todo automáticamente.** No tienes que iniciar el servicio a mano, dejar una terminal abierta, abrir un navegador ni escribir una dirección localhost cada vez. Al cerrar la ventana también se cierra el servicio que inició la aplicación.
+
+La comparación es con la instalación manual de **Voicebox v0.5.0 en Linux**, que fue la base de esta adaptación. El proyecto original ya cuenta con aplicaciones de escritorio para otras plataformas; Light Meimei aporta esta integración y configuración específica para Linux.
+
+| Mejora de esta edición | Qué cambia al usarla |
+| --- | --- |
+| Ventana propia y lanzador con icono | Se abre desde el menú KDE como una aplicación habitual. |
+| Inicio con logo y barra animada | Ves qué se está preparando; la bienvenida termina cuando la interfaz está lista. |
+| Distribución offline completa | El paquete incluye los modelos y dependencias necesarios. Tras descargar el paquete completo, no necesita descargar modelos al instalar o generar. |
+| Perfil de consumo reducido | Kokoro 82M para voz cotidiana, Qwen 0.6B para clonación y Whisper Base/Small para transcribir; se evita ofrecer modelos pesados no comprobados en el equipo objetivo. |
+| Gestión de memoria | Las tareas pesadas se ejecutan de una en una y el modelo anterior se libera al cambiar de motor. |
+| Español y Alex | Interfaz traducida y una voz masculina predefinida en español para empezar a escribir sin crear un clon. |
+| Progreso de generación claro | Estados de cola, carga, generación y reconexión, con tiempo transcurrido; no parece que la aplicación esté bloqueada. |
+| Reproducción comprensible | Indica si el audio está listo, reproduciéndose, pausado o terminado. Permite reproducción automática cuando está activada y ofrece controles visibles. |
+| Historial que se puede recorrer | La caja de escritura queda debajo de los audios y reserva espacio para el reproductor. El gesto vertical sobre la zona de voces desplaza el historial. |
+| Acciones alineadas | Editar, exportar y eliminar quedan en la misma posición aunque cambie la longitud de las descripciones. |
+| Recuperación de errores | Se recupera el progreso si se interrumpe su conexión, se evita duplicar peticiones y se conserva el texto cuando falla el envío. |
+| Texto español más predecible | Normaliza fechas, horas, números, porcentajes y abreviaturas antes de sintetizar; el texto original permanece en el historial. |
+| Interfaz ajustada a esta ventana | Se ocultan funciones exclusivas de otros entornos que no funcionan en esta integración Linux. |
+
+**La generación, la clonación, los perfiles y el historial proceden de Voicebox.** La aportación de Light Meimei es su integración como aplicación Linux, el empaquetado, los valores ligeros y las mejoras de uso enumeradas aquí. El detalle técnico y las correcciones están en [CHANGELOG-LIGHT.md](CHANGELOG-LIGHT.md).
+
+Es una opción pensada para equipos modestos como el de referencia de segueldev: Ryzen 5, 8 GB de RAM y RTX 2050 con 4 GB de VRAM. “Light” se refiere al uso de modelos ligeros y a la configuración; el instalador offline es grande porque lleva los archivos de IA incluidos. No garantiza que cualquier equipo pueda ejecutar clonación con rapidez ni que toda pronunciación sea perfecta.
+
 ## Proyecto original y adaptación
 
 El proyecto original es [jamiepine/voicebox](https://github.com/jamiepine/voicebox), creado por Jamie Pine junto con sus colaboradores. Se conserva su licencia MIT, su aviso de copyright y el historial de la versión utilizada.

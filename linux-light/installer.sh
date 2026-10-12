@@ -85,6 +85,7 @@ Exec="$EXEC_PATH/linux-light/launch"
 Icon=$APP_ID
 Terminal=false
 Categories=AudioVideo;Audio;
+Keywords=voicebox;voice box;meimei;voz;clonación;
 StartupNotify=true
 StartupWMClass=io.github.segueldev.voiceboxlightmeimei
 EOF
